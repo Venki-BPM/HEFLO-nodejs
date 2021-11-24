@@ -1,4 +1,4 @@
-# axios
+# HEFLO API
 
 API (Application Programming Interface) to handle customizations on HEFLO BPM using NodeJS and Typescript.
 
