@@ -1,0 +1,37 @@
+{
+  "name": "heflo-api",
+  "version": "1.0.8",
+  "author": "venkidevelopers",
+  "description": "HEFLO BPM API for TypeScript",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Venki-BPM/HEFLO-nodejs.git"
+  },
+  "main": "dist/Index.js",
+  "typings": "dist/Index.d.ts",
+  "scripts": {
+    "compile": "tsc",
+    "localCopy": "copyfiles -a \"./dist/*\" \"/home/wallace/Develop/POC-Icade/node_modules/heflo-api/\" && copyfiles \"./dist/Classes/*\" \"/home/wallace/Develop/POC-Icade/node_modules/heflo-api/\" && copyfiles \"./dist/Contexts/*\" \"/home/wallace/Develop/POC-Icade/node_modules/heflo-api/\"  ",
+    "compileLocal": "npm run compile && npm run localCopy"
+  },
+  "dependencies": {
+    "axios": "0.18.0",
+    "node-cache": "5.1.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.1",
+    "@types/request": "^2.48.3",
+    "typescript": "3.9.7",
+    "axios": "0.18.0",
+    "node-cache": "5.1.2",
+    "copyfiles": "^2.1.0"
+  },
+  "bugs": {
+    "url": "https://github.com/Venki-BPM/HEFLO-nodejs/issues"
+  },
+  "homepage": "https://github.com/Venki-BPM/HEFLO-nodejs#readme",
+  "keywords": [
+    "heflo"
+  ],
+  "license": "MIT"
+}

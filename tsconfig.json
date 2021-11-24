@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "outDir": "dist",
+        "module": "commonjs",
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "moduleResolution": "node",
+        "target": "es5",
+        "declaration": true,
+        "preserveConstEnums": true,
+        "skipDefaultLibCheck": true,
+        "skipLibCheck": true,
+        "lib": ["es5", "es6", "dom"],
+      },
+      "include": [
+        "src/**/*.ts"
+      ],
+      "exclude": ["node_modules", ".vscode", "./dist"]
+}
