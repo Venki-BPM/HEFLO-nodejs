@@ -9,11 +9,6 @@
   },
   "main": "dist/Index.js",
   "typings": "dist/Index.d.ts",
-  "scripts": {
-    "compile": "tsc",
-    "localCopy": "copyfiles -a \"./dist/*\" \"/home/wallace/Develop/POC-Icade/node_modules/heflo-api/\" && copyfiles \"./dist/Classes/*\" \"/home/wallace/Develop/POC-Icade/node_modules/heflo-api/\" && copyfiles \"./dist/Contexts/*\" \"/home/wallace/Develop/POC-Icade/node_modules/heflo-api/\"  ",
-    "compileLocal": "npm run compile && npm run localCopy"
-  },
   "dependencies": {
     "axios": "0.27.0",
     "node-cache": "5.1.2"
