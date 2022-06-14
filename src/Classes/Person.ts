@@ -3,9 +3,6 @@ import { Metadata } from '../Metadata';
 import { Account } from './Account';
 import { IDictionary } from '../Types';
 
-import * as NodeCache from 'node-cache';
-const cache = new NodeCache();
-
 export class Person extends Account {
     public static ClassOid = "8c6f3260-c030-40a7-8d60-60142fdef2a5";
     public static ClassName = "Venki.Organization.Person";

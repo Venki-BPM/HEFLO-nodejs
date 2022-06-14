@@ -38,10 +38,17 @@ export class Metadata {
     public static GetPropertyName(context: Context, className: string, alias: string): string | undefined {
         let cacheKey = this.buildClassCacheKey(context, className);
         let classJSON = context.Cache.get(cacheKey);
-        if (classJSON) {
+        if (classJSON && alias) {
             let metaClass = JSON.parse(<string>classJSON);
             if (metaClass) {
-                let metaProp = (<Array<IDictionary>>metaClass["Properties"]).filter(item => item["Name"] === alias || item["CustomAlias"] === alias);
+                let aliasSearch = (alias || "").toLowerCase();
+                let metaProp = (<Array<IDictionary>>metaClass["Properties"]).filter(item => {
+                    if (item["Name"] && item["Name"].toString().toLowerCase() === aliasSearch)
+                        return true;
+                    else if (item["CustomAlias"] && item["CustomAlias"].toString().toLowerCase() === aliasSearch)
+                        return true;
+                    return false;
+                });
                 if (metaProp && metaProp.length)
                     return metaProp[0]["Name"];
                 else
@@ -81,7 +88,8 @@ export class Metadata {
                 context.Cache.set(cacheKey, metaJSON, context.CacheTTL);
         } else {
             let metaJSON: string = "";
-            metaClass = <Class>(await context.FindAsync(`${context.CacheNoSQL}odata/Class('${className}')/DataServiceControllers.GetClassByOid?$select=Name&$expand=Properties($select=Name,Type,ListEntityName,CustomAlias)`,
+            let classOid = className.startsWith("ce_") ? className.substring(3) : className;
+            metaClass = <Class>(await context.FindAsync(`${context.CacheNoSQL}odata/Class('${classOid}')/DataServiceControllers.GetClassByOid?$select=Name&$expand=Properties($select=Name,Type,ListEntityName,CustomAlias)`,
                 Class.ClassOid, (data: Array<any>) => {
                     metaJSON = JSON.stringify(data);
                     return Class.Parse(context, data);

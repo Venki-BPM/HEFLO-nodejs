@@ -1,0 +1,8 @@
+﻿/wwwroot/*
+/project.lock.json
+/node_modules
+/bower_components
+/wwwroot/scripts/
+/dist/*
+
+package-lock\.json

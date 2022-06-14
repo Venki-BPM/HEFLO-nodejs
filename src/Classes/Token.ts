@@ -5,6 +5,9 @@ import { WorkItem } from './WorkItem';
 import { Account } from './Account';
 import { FlowElement } from './FlowElement';
 import { IDictionary, TokenStatus } from '../Types';
+import { Person } from './Person';
+import { Group } from './Group';
+import { Metadata } from './../Metadata';
 
 export class Token extends BaseModel {
     public static ClassOid = "78e3a4c9-8885-415d-bba1-1970e4d1cf97";
@@ -62,7 +65,7 @@ export class Token extends BaseModel {
 
     public set Subject(value: string) {
         this.subject = value;
-        this.context.addChange(WorkItem.ClassOid, "Subject", this.oid, value);
+        this.context.addChange(Token.ClassOid, "Subject", this.oid, value);
     }
 
     public get StartDate(): Date | undefined {
@@ -130,6 +133,20 @@ export class Token extends BaseModel {
             return FlowElement.FindAsync(context, this.currentFlowElementOid);
         else
             return undefined;
+    }
+
+    public async CalcResourceAsync(resourceName: string): Promise<Array<Account>> {
+        await Metadata.CheckAsync(this.context, Person.ClassOid);
+        await Metadata.CheckAsync(this.context, Group.ClassOid);
+        return <Array<Account>>(await this.context.FindAllAsync(`${this.GetStorageEndPoint(this.oid)}/DataServiceControllers.GetResourceCalculation?resourceName=${encodeURI(resourceName)}&$selectCustom=true`,
+            Account.ClassOid, (data: Array<any>) => { 
+                if (data["@odata.type"] === "#Venki.Organization.Person")
+                    return Person.Parse(this.context, data);
+                if (data["@odata.type"] === "#Venki.Organization.Group")
+                    return Group.Parse(this.context, data);
+                else 
+                    return Account.Parse(this.context, data); 
+        } ));
     }
 
     public AddComment(message: string) {

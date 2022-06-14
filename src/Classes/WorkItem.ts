@@ -165,33 +165,23 @@ export class WorkItem extends BaseModel {
             for(let i=0; i<tokens.length; i++) {
                 let token = tokens[i];
                 if (oids.length) {
-
-                    let list: Array<CustomType> = this.lists[<string>actualName];
-                    let i = 0;
-                    for(i=0; i<list.length; i++) {
-                        //await list[i].SaveAsync(context, Token.ClassOid, token.Oid.toString());
-                    }
-
                     let props: any = {};
                     props[<string>actualName] = oids.join(',');
                     let payload = {
                         ClassOid: Token.ClassOid,
                         InstanceOid: token.Oid.toString(),
-                        Properties: JSON.stringify(props)
+                        Properties: JSON.stringify(props),
+                        NotifyChanges: true
                     }
                     await axios.post(`${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
 
                     if (token.CurrentTokenExecution) {
 
-                        let i = 0;
-                        for(i=0; i<list.length; i++) {
-                            //await list[i].SaveAsync(context, WorkItem.TokenExecutionClassOid, token.CurrentTokenExecution);
-                        }
-
                         payload = {
                             ClassOid: WorkItem.TokenExecutionClassOid,
                             InstanceOid: token.CurrentTokenExecution.toString(),
-                            Properties: JSON.stringify(props)
+                            Properties: JSON.stringify(props),
+                            NotifyChanges: false
                         }
                         await axios.post(`${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
                     }
@@ -228,6 +218,22 @@ export class WorkItem extends BaseModel {
         }
 
         await axios.post(`${this.context.StorageRelational}odata/WorkItem/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
+    }
+
+    public static async EvaluateBRAsync(context: Context, oid: number, br: string) {
+        var result = await axios.get(`${context.StorageRelational}odata/WorkItem(${oid}L)/DataServiceControllers.EvaluateBR?brOid=${br}`, context.CreateRequest("GET"));
+        return result.data.value;
+    }
+
+    public static async RestartAsync(context: Context, oid: number) {
+        await axios.post(`${context.StorageRelational}odata/WorkItem(${oid}L)/DataServiceControllers.Restart`, {}, context.CreateRequest("POST"));
+    }
+
+    public static async ForceBoundaryAsync(context: Context, oid: number, code: string) {
+        let payload = {
+            code: code
+        }
+        await axios.post(`${context.StorageRelational}odata/WorkItem(${oid}L)/DataServiceControllers.ForceBoundary`, payload, context.CreateRequest("POST"));
     }
 
     public AddComment(message: string) {

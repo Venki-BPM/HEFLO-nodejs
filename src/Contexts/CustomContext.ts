@@ -25,8 +25,10 @@ export class CustomRecordContext extends CustomContext {
 
     constructor(request: any) {
         super(request);
-        this.record = CustomType.Parse(this, request.body["ClassOid"], request.body["Entity"]);
-        Metadata.Add(this, request.body["ClassOid"], request.body["Metadata"]["Entity"]);
+        if (request.body["Record"]) {
+            this.record = CustomType.Parse(this, request.body["RecordClassOid"], request.body["Record"]);
+            Metadata.Add(this, request.body["RecordClassOid"], request.body["Metadata"]["Record"]);
+        }
     }
 }
 

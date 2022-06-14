@@ -44,3 +44,17 @@ export class TokenWorkItemExecuteContext extends TokenWorkItemContext {
         this.target = FlowElement.Parse(this, request.body["Target"]);
     }
 }
+
+export class TokenWorkItemBeforeInitContext extends Context {
+
+    private payload: any;
+
+    public get Payload(): any {
+        return this.payload;
+    }
+
+    constructor(request: any) {
+        super(request);
+        this.payload = request.body["Payload"];
+    }
+}

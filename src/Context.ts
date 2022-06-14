@@ -1,5 +1,5 @@
 import * as NodeCache from 'node-cache';
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 
 import { Delta, DeltaItem, WorkItemComment } from './Delta';
 import { Metadata } from './Metadata';
@@ -162,17 +162,18 @@ export class Context {
         return delta;
     }
 
-    public CreateRequest(method: string): AxiosRequestConfig {
+    public CreateRequest(method: Method): AxiosRequestConfig {
         let headers: any = {};
         headers["Authorization"] = `Bearer ${this.authorizationHeader}`;
         headers["CurrentDomain"] = this.domain;
         headers["Accept"] = "application/json";
         headers["OData-Version"] = "4.0";
+        headers["GetTestObjects"] = this.isTest;
 
         let settings: AxiosRequestConfig = {
             method: method,
             headers: headers,
-            responseType: "application/json"
+            responseType: "json"
         }
 
         return settings;
@@ -304,10 +305,10 @@ export class Context {
             if (!field.RecordValue) {
                 if (field.Value === undefined || field.Value === null)
                     content.push(`"${field.PropertyName}": null`)
-                else if (!isNaN(+field.Value))
-                    content.push(`"${field.PropertyName}": ${field.Value}`)
                 else if (field.Value instanceof Date)
                     content.push(`"${field.PropertyName}": "${field.Value.toISOString()}"`);
+                else if (!isNaN(+field.Value))
+                    content.push(`"${field.PropertyName}": ${field.Value}`)
                 else
                     content.push(`"${field.PropertyName}": "${field.Value}"`);
             }
@@ -334,4 +335,103 @@ export class Context {
         return body.join('\r\n');
     }
 
+    private static queryCache = new NodeCache();
+
+    public async QueryAsync(sql: string, page: number, itemsPerPage: number, parameters: Array<any>, avoidCache: boolean = false): Promise<Array<any>> {
+
+        if (itemsPerPage > 100)
+            throw "The number of items per page must be equal or less than 100";
+
+        if (page <= 0)
+            throw "The page index must be greater or equal to 1";
+
+        if (!parameters) parameters = [];
+        let hashCode = (s) => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+        
+        let cacheKey = `${hashCode(this.Domain)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => i.toString()).join('-'))}`;
+        let resultSet = Context.queryCache.get(cacheKey) as Array<any>;
+        if (resultSet && !avoidCache) {
+            return resultSet;
+        }
+
+        let payload = {
+            Sql: sql,
+            Page: +page,
+            ItemsPerPage: +itemsPerPage,
+            Parameters: JSON.stringify(parameters)
+        }
+
+        let response = await axios.post(`${this.StorageRelational}odata/DataExportRequest/DataServiceControllers.Query`, payload, this.CreateRequest("POST"));
+        let result: QueryResult = JSON.parse(response.data.value);
+
+        if (result.Error)
+            throw JSON.parse(result.Error);
+        else {
+            if (!avoidCache) {
+                Context.queryCache.set(cacheKey, result.ResultSet, 60);
+            }
+            return result.ResultSet;
+        }
+    }
+
+    public static async QueryAsync(environment: string, apiKey: string, secretKey: string, sql: string, page: number, itemsPerPage: number, 
+            parameters: Array<any>, avoidCache: boolean = false): Promise<Array<any>> {
+
+        if (itemsPerPage > 100)
+            throw "The number of items per page must be equal or less than 100";
+
+        if (page <= 0)
+            throw "The page index must be greater or equal to 1";
+
+        if (!parameters) parameters = [];
+        let hashCode = (s) => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+        
+        let cacheKey = `${hashCode(environment)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => i.toString()).join('-'))}`;
+        let resultSet = Context.queryCache.get(cacheKey) as Array<any>;
+        if (resultSet && !avoidCache) {
+            return resultSet;
+        }
+
+        let context = await Context.BuildContextAsync(environment, apiKey, secretKey);
+
+        let payload = {
+            Sql: sql,
+            Page: +page,
+            ItemsPerPage: +itemsPerPage,
+            Parameters: JSON.stringify(parameters)
+        }
+
+        let response = await axios.post(`${context.StorageRelational}odata/DataExportRequest/DataServiceControllers.Query`, payload, context.CreateRequest("POST"));
+        let result: QueryResult = JSON.parse(response.data.value);
+
+        if (result.Error)
+            throw JSON.parse(result.Error);
+        else {
+            if (!avoidCache) {
+                Context.queryCache.set(cacheKey, result.ResultSet, 60);
+            }
+            return result.ResultSet;
+        }
+    }
+
+    public async SendMailAsync(recipients: Array<string>, subject: string, body: string, attachments?: Array<string>, tokenOid?: number, sender?: string) {
+
+        let payload = {
+            Recipients: JSON.stringify(recipients || []),
+            Subject: subject,
+            Body: body,
+            Attachments: JSON.stringify(attachments || []),
+            TokenOid: tokenOid,
+            Sender: sender
+        }
+
+        await axios.post(`${this.StorageRelational}odata/Connector/DataServiceControllers.SendMail`, payload, this.CreateRequest("POST"));
+    }
+
 }
+
+interface QueryResult {
+    ResultSet?: Array<any>;
+    Error?: any;
+}
+

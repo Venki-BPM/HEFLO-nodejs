@@ -62,7 +62,7 @@ app.post('/OnResourceCalculation', async (request, response) => {
     // Your code here.
   
     // Finally, return list of emails
-    response.json( [ "email1@mycompany.com", "email2@mycompany.com" ] );
+    response.json( [ "email1@mycompany.com", "email2@mycompany.com", ["name-of-department-or-group"] ] );
   } catch (err) {
     response.status(500);
     esponse.send("Error executing the request, details: " + err);
@@ -78,7 +78,7 @@ app.post('/OnExecute', async (request, response) => {
     // Access all data of the process instance
     let context = new Events.WorkItem.OnExecuteSequenceFlow(request);
 
-    let person = await HEFLOApi.Person.NewAsync(context);
+    let person = await Person.NewAsync(context);
     person.Name = context.WorkItem.Get("name_person");
     person.Email = context.WorkItem.Get("email_person");
     // save the record using async 

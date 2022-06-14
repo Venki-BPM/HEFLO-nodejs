@@ -1,22 +1,22 @@
 import { Context } from '../Context';
 import { Metadata } from '../Metadata';
-import { Department } from '../Classes/Department';
+import { Person } from '../Classes/Person';
 import { CustomType } from '../BaseModel';
 
-export class DepartmentContext extends Context {
-    private department: Department;
+export class PersonContext extends Context {
+    private person: Person;
 
     constructor (request: any) {
         super(request);
-        this.department = Department.Parse(this, request.body["Entity"]);
+        this.person = Person.Parse(this, request.body["Entity"]);
     }
 
-    public get Department(): Department {
-        return this.department;
+    public get Person(): Person {
+        return this.person;
     }
 }
 
-export class DepartmentRecordContext extends DepartmentContext {
+export class PersonRecordContext extends PersonContext {
     private record: CustomType;
 
     public get Record(): CustomType {

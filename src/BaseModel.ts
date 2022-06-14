@@ -1,7 +1,6 @@
 import { Context } from './Context';
 import { Metadata } from './Metadata';
 import { Guid, IDictionary } from './Types';
-import axios, { AxiosRequestConfig } from 'axios';
 
 export class BaseModel {
 
@@ -26,6 +25,7 @@ export class BaseModel {
     }
 
     public Get(fieldName: string) {
+        if (fieldName && fieldName.toLowerCase() === "oid") return this.GetKey();
         let actualName = Metadata.GetPropertyName(this.context, this.classOid, fieldName);
         if (!actualName)
             throw `Field ${fieldName} not found`;
@@ -81,6 +81,8 @@ export class BaseModel {
         if (list) return list;
 
         let entityId = Metadata.GetListEntity(this.context, this.classOid, actualName);
+        await Metadata.CheckAsync(this.context, entityId);
+
         if (entityId) {
             let listJSON: string = this.fields[`${actualName}List`];
             if (listJSON) {
@@ -96,6 +98,8 @@ export class BaseModel {
             }
 
             let classOid = this.classOid || BaseModel.ProcessInstanceClassOid;
+            classOid = classOid.startsWith("ce_") ? classOid.substring(3) : classOid;
+
             let url = `${this.context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.GetListData?classOid=${classOid}&instanceOid=${this.GetKey()}&entityOid=${entityId}`;
 
             list = <Array<CustomType>>(await this.context.FindAllAsync(url, entityId, (data: Array<any>) => {
@@ -116,7 +120,7 @@ export class BaseModel {
         return copyRecord;
     }
 
-    public async AddRecordAsync(fieldName: string, record: any): Promise<void> {
+    public async AddRecordAsync(fieldName: string, record: any): Promise<CustomType> {
         await Metadata.CheckAsync(this.context, this.classOid);
         let actualName = Metadata.GetPropertyName(this.context, this.classOid, fieldName);
         if (!actualName)
@@ -130,11 +134,13 @@ export class BaseModel {
             record.Oid = Guid.newGuid();
             this.context.addRecordChange(this.classOid, actualName, this.GetKey(), record);
 
-            if (this.lists[actualName]) {
-                let list: Array<CustomType> = this.lists[actualName];
-                let newItem: CustomType = CustomType.FromJSON(this.context, entityId, record);
-                list.push(newItem);
-            }
+            if (!this.lists[actualName])
+                this.lists[actualName] = await this.GetListAsync(actualName);
+
+            let list: Array<CustomType> = this.lists[actualName];
+            let newItem: CustomType = CustomType.FromJSON(this.context, entityId, record);
+            list.push(newItem);
+            return newItem;
         }
     }
 
@@ -147,21 +153,27 @@ export class BaseModel {
         let entityId = Metadata.GetListEntity(this.context, this.classOid, actualName);
         if (entityId) {
             await Metadata.CheckAsync(this.context, entityId);
-
-            let delta = { fields: record.fields, InstanceOid: instanceId};
+            record = this.CopyRecord(entityId, record)
+            let delta = { fields: record, InstanceOid: instanceId };
             this.context.addRecordChange(this.classOid, actualName, this.GetKey(), delta);
 
-            if (this.lists[actualName]) {
-                let list: Array<CustomType> = this.lists[actualName];
-                let currentItem = list.filter(item => item.Oid === instanceId);
-                if (currentItem && currentItem.length) {
-                    let item = currentItem[0];
-                    item.Parse(record);
-                    list = list.filter(item => item.Oid === instanceId);
-                    list.push(item);
-                }
+            if (!this.lists[actualName])
+                this.lists[actualName] = await this.GetListAsync(actualName);
+
+            let list: Array<CustomType> = this.lists[actualName];
+            let currentItem = list.filter(item => item.Oid === instanceId);
+            if (currentItem && currentItem.length) {
+                let item = currentItem[0];
+                item.Parse(record);
+                list = list.filter(item => item.Oid === instanceId);
+                list.push(item);
             }
         }
+    }
+
+    public async DeleteRecordsAsync(fieldName: string, instances: Array<string>) {
+        for(let instanceOid of instances)
+            await this.DeleteRecordAsync(fieldName, instanceOid);
     }
 
     public async DeleteRecordAsync(fieldName: string, instanceId: string) {
@@ -173,10 +185,10 @@ export class BaseModel {
         let record: any = { InstanceOid: instanceId, Deleted: true };
         this.context.addRecordChange(this.classOid, actualName, this.GetKey(), record);
 
-        if (this.lists[actualName]) {
-            let list: Array<CustomType> = this.lists[actualName];
-            list = list.filter(item => item.Oid === instanceId);
-        }
+        if (!this.lists[actualName])
+            this.lists[actualName] = await this.GetListAsync(actualName);
+
+        this.lists[actualName] = this.lists[actualName].filter(item => item.Oid !== instanceId);
     }
 
     public async SaveRecordListAsync(context: Context, fieldName: string) {
@@ -195,17 +207,8 @@ export class BaseModel {
                 oids.push(element.Oid);
             }
 
-            if (oids.length) {
-                let props: any = {};
-                props[<string>actualName] = oids.join(',');
-                let payload = {
-                    ClassOid: this.classOid,
-                    InstanceOid: this.GetKey().toString(),
-                    Properties: JSON.stringify(props)
-                }
-
-                await axios.post(`${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
-            }
+            this.LogChange(this.classOid, fieldName, this.GetKey().toString(), oids.join(','));
+            await this.SaveAsync(context);
         }
     }
 
@@ -284,10 +287,13 @@ export class CustomType extends BaseModel {
 
     public async SaveAsync(context: Context, classRef?: string, instanceRef?: string): Promise<number | string> {
 
+        let classOid = classRef || this.classOid;
+        classOid = classOid.startsWith("ce_") ? classOid.substring(3) : classOid;
         let payload = {
-            ClassOid: classRef || this.classOid,
+            ClassOid: classOid,
             InstanceOid: instanceRef || this.Oid,
-            Properties: JSON.stringify(this.fields)
+            Properties: JSON.stringify(this.fields),
+            NotifyChanges: true
         }
 
         await context.PostAsync(`${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddEntityData`, payload, {});

@@ -1,0 +1,7 @@
+.vscode/*
+.vs/*
+.env
+/src/*
+.gitignore
+tsconfig.json
+PUBLISH.MD

@@ -2,7 +2,6 @@ import { Metadata } from '../Metadata';
 import { CustomType } from '../BaseModel';
 import { File } from '../Classes/File';
 import { TokenWorkItemContext } from './TokenWorkItemContext';
-import { FlowElement } from '../Classes/FlowElement';
 
 export class WorkItemRecordContext extends TokenWorkItemContext {
     private record: CustomType;
@@ -13,8 +12,10 @@ export class WorkItemRecordContext extends TokenWorkItemContext {
 
     constructor(request: any) {
         super(request);
-        this.record = CustomType.Parse(this, request.body["RecordClassOid"], request.body["Record"]);
-        Metadata.Add(this, request.body["RecordClassOid"], request.body["Metadata"]["Record"]);
+        if (request.body["Record"]) {
+            this.record = CustomType.Parse(this, request.body["RecordClassOid"], request.body["Record"]);
+            Metadata.Add(this, request.body["RecordClassOid"], request.body["Metadata"]["Record"]);
+        }
     }
 }
 
