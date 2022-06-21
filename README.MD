@@ -57,7 +57,7 @@ Performing the calculation of who will perform a task
 app.post('/OnResourceCalculation', async (request, response) => {
   try {
     // Access all data of the process instance
-    let context = new Events.WorkItem.OnResourceCalculation(request)
+    let context = new Events.WorkItem.OnResourceCalculation(request);
 
     // Your code here.
   
