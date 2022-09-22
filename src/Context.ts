@@ -22,6 +22,8 @@ export class Context {
             this.cacheRelational = request.body["CacheRelational"];
             this.storageNoSQL = request.body["StorageNoSQL"];
             this.cacheNoSQL = request.body["CacheNoSQL"];
+            this.region = request.body["Region"];
+            this.stage = request.body["Stage"];
         } else {
             this.authorizationHeader = "";
             this.domain = "";
@@ -31,6 +33,8 @@ export class Context {
             this.cacheRelational = "";
             this.storageNoSQL = "";
             this.cacheNoSQL = "";
+            this.region = "";
+            this.stage = "prod";
         }
     }
 
@@ -54,6 +58,8 @@ export class Context {
         context.apiKey = apiKey;
         context.secretKey = secretKey;
         context.environment = environment;
+        context.region = result.data.appRegion;
+        context.stage = result.data.appStage || "prod";
         return context;
     }
 
@@ -95,6 +101,8 @@ export class Context {
     private apiKey: string;
     private secretKey: string;
     private environment: string;
+    private stage: string = "prod";
+    private region: string;
 
     public get AuthorizationHeader() {
         return this.authorizationHeader;
@@ -136,6 +144,10 @@ export class Context {
 
     public get IsTest() {
         return this.isTest;
+    }
+
+    public get Region() {
+        return this.region;
     }
 
     public addChange(className: string, propertyName: string, key: string | number, value: Object | undefined) {
@@ -360,9 +372,9 @@ export class Context {
         return body.join('\r\n');
     }
 
-    private static queryCache = new NodeCache();
+    private static queryCache = new NodeCache( { checkperiod: 30 } );
 
-    public async QueryAsync(sql: string, page: number, itemsPerPage: number, parameters: Array<any>, avoidCache: boolean = false): Promise<Array<any>> {
+    public async QueryAsync(sql: string, page: number, itemsPerPage: number, parameters: Array<QueryParam>, avoidCache: boolean = false): Promise<Array<any>> {
 
         if (itemsPerPage > 100)
             throw "The number of items per page must be equal or less than 100";
@@ -373,7 +385,7 @@ export class Context {
         if (!parameters) parameters = [];
         let hashCode = (s) => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
         
-        let cacheKey = `${hashCode(this.Domain)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => i.toString()).join('-'))}`;
+        let cacheKey = `${hashCode(this.Domain)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => (i || "__$null$__").toString()).join('-'))}`;
         let resultSet = Context.queryCache.get(cacheKey) as Array<any>;
         if (resultSet && !avoidCache) {
             if (process.env.DEBUG) console.log(`Cache hit for ${sql}`);
@@ -387,11 +399,11 @@ export class Context {
             Parameters: JSON.stringify(parameters)
         }
 
-        let response = await PostAsync(this, `${this.StorageRelational}odata/DataExportRequest/DataServiceControllers.Query`, payload, this.CreateRequest("POST"));
-        let result: QueryResult = JSON.parse(response.data.value);
+        let response = await PostAsync(this, `http://${this.region}-${this.stage}-queryexec.heflo.com/api/Sql/Execute`, payload, this.CreateRequest("POST"));
+        let result: QueryResult = response.data;
 
         if (result.Error)
-            throw JSON.parse(result.Error);
+            throw result.Error;
         else {
             if (!avoidCache) {
                 Context.queryCache.set(cacheKey, result.ResultSet, 60);
@@ -401,7 +413,7 @@ export class Context {
     }
 
     public static async QueryAsync(environment: string, apiKey: string, secretKey: string, sql: string, page: number, itemsPerPage: number, 
-            parameters: Array<any>, avoidCache: boolean = false): Promise<Array<any>> {
+            parameters: Array<QueryParam>, avoidCache: boolean = false): Promise<Array<any>> {
 
         if (itemsPerPage > 100)
             throw "The number of items per page must be equal or less than 100";
@@ -412,7 +424,7 @@ export class Context {
         if (!parameters) parameters = [];
         let hashCode = (s) => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
         
-        let cacheKey = `${hashCode(environment)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => i.toString()).join('-'))}`;
+        let cacheKey = `${hashCode(environment)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => (i || "__$null$__").toString()).join('-'))}`;
         let resultSet = Context.queryCache.get(cacheKey) as Array<any>;
         if (resultSet && !avoidCache) {
             if (process.env.DEBUG) console.log(`Cache hit for ${sql}`);
@@ -428,15 +440,14 @@ export class Context {
             Parameters: JSON.stringify(parameters)
         }
 
-        let response = await PostAsync(context, `${context.StorageRelational}odata/DataExportRequest/DataServiceControllers.Query`, payload, context.CreateRequest("POST"));
-        let result: QueryResult = JSON.parse(response.data.value);
+        let response = await PostAsync(context, `http://${context.region}-${context.stage}-queryexec.heflo.com/api/Sql/Execute`, payload, context.CreateRequest("POST"));
+        let result: QueryResult = response.data;
 
         if (result.Error)
-            throw JSON.parse(result.Error);
+            throw result.Error;
         else {
-            if (!avoidCache) {
+            if (!avoidCache)
                 Context.queryCache.set(cacheKey, result.ResultSet, 60);
-            }
             return result.ResultSet;
         }
     }
@@ -462,3 +473,7 @@ interface QueryResult {
     Error?: any;
 }
 
+export interface QueryParam {
+    name: string;
+    value: string | number;
+}
