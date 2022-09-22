@@ -18,4 +18,9 @@ export interface Delta {
     RefreshArguments: boolean;
     Changes: Array<DeltaItem>;
     Comments: Array<WorkItemComment>;
+    Options: GetModifiedDataOptions;
+}
+
+export interface GetModifiedDataOptions {
+    refresh: boolean;
 }

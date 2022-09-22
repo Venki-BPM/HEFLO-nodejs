@@ -1,13 +1,13 @@
 import * as NodeCache from 'node-cache';
-import axios, { AxiosRequestConfig, AxiosResponse, Method } from 'axios';
-
-import { Delta, DeltaItem, WorkItemComment } from './Delta';
+import { AxiosRequestConfig, Method } from 'axios';
+import { Delta, DeltaItem, GetModifiedDataOptions, WorkItemComment } from './Delta';
 import { Metadata } from './Metadata';
 import { BaseModel } from './BaseModel';
 import { WorkItem } from './Classes/WorkItem';
 import { Token } from './Classes/Token';
 import { Class } from './Classes/Class';
 import { Guid, IDictionary } from './Types';
+import { PostAsync, GetAsync } from './Helpers/Rest';
 
 export class Context {
     constructor(request: any) {
@@ -34,29 +34,50 @@ export class Context {
         }
     }
 
+    /**
+    * Generates an access token to access all functions of the API.
+    * @param {string} environment - The environment identifier. It can be obtained from the Manage Environments page.
+    * @param {string} apiKey - API key. It can be obtained from the Web Services panel inside the process editor.
+    * @param {string} secretKey - Secret of the API key. It can be obtained from the Web Services panel inside the process editor.
+    */
     public static async BuildContextAsync(environment: string, apiKey: string, secretKey: string): Promise<Context> {
         let context = new Context(null);
-
         context.storageNoSQL = process.env.AUTH_ENDPOINT || "https://auth.heflo.com/";
         context.cacheNoSQL = context.storageNoSQL;
-
-        const endpoint = `${context.storageNoSQL}token`;
-        let config: AxiosRequestConfig = {
-          url: endpoint,
-          method: "POST",
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          data: `grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}&scope=${environment}`
-        }
-        const result = await axios.post(endpoint, `grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}&scope=${environment}`, config);
-
+        const result = await Context.GetToken(context, environment, apiKey, secretKey);
         context.storageRelational = result.data.appEndpoint;
         context.cacheRelational = context.storageRelational;
         context.authorizationHeader = result.data.access_token;
         context.isTest = false;
         context.cacheTTL = 600;
         context.domain = environment;
-
+        context.apiKey = apiKey;
+        context.secretKey = secretKey;
+        context.environment = environment;
         return context;
+    }
+
+    private static async GetToken(context, environment: string, apiKey: string, secretKey: string) {
+        const storageNoSQL = process.env.AUTH_ENDPOINT || "https://auth.heflo.com/"
+        const endpoint = `${storageNoSQL}token`;
+        let config: AxiosRequestConfig = {
+          url: endpoint,
+          method: "POST",
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          data: `grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}&scope=${environment}`
+        }
+        return await PostAsync(context, endpoint, `grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}&scope=${environment}`, config);
+    }
+
+    /**
+    * Renew the access token based on the environment, API key, and secret key provided for the static method {@link BuildContextAsync}
+    */
+    public async Refresh() {
+        if (this.authorizationHeader) {
+            const result = await Context.GetToken(this, this.environment, this.apiKey, this.secretKey);
+            this.authorizationHeader = result.data.access_token;
+            if (process.env.DEBUG) console.log(`Access token renewed for the clientId ${this.apiKey}`);
+        }
     }
 
     private changes: Array<DeltaItem>;
@@ -71,6 +92,9 @@ export class Context {
     private storageNoSQL: string;
     private cacheNoSQL: string;
     private cache: NodeCache = new NodeCache( { deleteOnExpire: true, stdTTL: 600 } );
+    private apiKey: string;
+    private secretKey: string;
+    private environment: string;
 
     public get AuthorizationHeader() {
         return this.authorizationHeader;
@@ -153,11 +177,12 @@ export class Context {
         }
     }
 
-    public GetModifiedData(): Delta {
+    public GetModifiedData(options: GetModifiedDataOptions = null): Delta {
         let delta: Delta = {
             RefreshArguments: false,
             Changes: this.changes,
-            Comments: this.comments
+            Comments: this.comments,
+            Options: options
         }
         return delta;
     }
@@ -188,7 +213,7 @@ export class Context {
     }
 
     public async FindAllAsync(endPoint: string, classOid: string, parseCallback: (data: any) => BaseModel): Promise<Array<BaseModel>> {
-        let baseObj = await axios.get(endPoint, this.CreateRequest("GET"));
+        let baseObj = await GetAsync(this, endPoint, this.CreateRequest("GET"));
 
         let result: Array<BaseModel> = [];
         let data = new Array();
@@ -239,7 +264,7 @@ export class Context {
                 }
             });
         }
-        let response = await axios.post(endPoint, payload, this.CreateRequest("POST"));
+        let response = await PostAsync(this, endPoint, payload, this.CreateRequest("POST"));
         return response.data;
     }
 
@@ -269,7 +294,7 @@ export class Context {
         
         let data = this.pack(endPoint, delta, entities, boundary);
 
-        let response = await axios.post(`${endPoint}odata/$batch`, data, settings);
+        let response = await PostAsync(this, `${endPoint}odata/$batch`, data, settings);
 
         if (response.data.responses && response.data.responses.length) {            
             let errors = (<Array<any>>response.data.responses).filter((resp) => resp.status < 200 || resp.status > 299);
@@ -351,6 +376,7 @@ export class Context {
         let cacheKey = `${hashCode(this.Domain)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => i.toString()).join('-'))}`;
         let resultSet = Context.queryCache.get(cacheKey) as Array<any>;
         if (resultSet && !avoidCache) {
+            if (process.env.DEBUG) console.log(`Cache hit for ${sql}`);
             return resultSet;
         }
 
@@ -361,7 +387,7 @@ export class Context {
             Parameters: JSON.stringify(parameters)
         }
 
-        let response = await axios.post(`${this.StorageRelational}odata/DataExportRequest/DataServiceControllers.Query`, payload, this.CreateRequest("POST"));
+        let response = await PostAsync(this, `${this.StorageRelational}odata/DataExportRequest/DataServiceControllers.Query`, payload, this.CreateRequest("POST"));
         let result: QueryResult = JSON.parse(response.data.value);
 
         if (result.Error)
@@ -389,6 +415,7 @@ export class Context {
         let cacheKey = `${hashCode(environment)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => i.toString()).join('-'))}`;
         let resultSet = Context.queryCache.get(cacheKey) as Array<any>;
         if (resultSet && !avoidCache) {
+            if (process.env.DEBUG) console.log(`Cache hit for ${sql}`);
             return resultSet;
         }
 
@@ -401,7 +428,7 @@ export class Context {
             Parameters: JSON.stringify(parameters)
         }
 
-        let response = await axios.post(`${context.StorageRelational}odata/DataExportRequest/DataServiceControllers.Query`, payload, context.CreateRequest("POST"));
+        let response = await PostAsync(context, `${context.StorageRelational}odata/DataExportRequest/DataServiceControllers.Query`, payload, context.CreateRequest("POST"));
         let result: QueryResult = JSON.parse(response.data.value);
 
         if (result.Error)
@@ -425,7 +452,7 @@ export class Context {
             Sender: sender
         }
 
-        await axios.post(`${this.StorageRelational}odata/Connector/DataServiceControllers.SendMail`, payload, this.CreateRequest("POST"));
+        await PostAsync(this, `${this.StorageRelational}odata/Connector/DataServiceControllers.SendMail`, payload, this.CreateRequest("POST"));
     }
 
 }
