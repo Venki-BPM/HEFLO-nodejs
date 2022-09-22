@@ -399,7 +399,7 @@ export class Context {
             Parameters: JSON.stringify(parameters)
         }
 
-        let response = await PostAsync(this, `http://${this.region}-${this.stage}-queryexec.heflo.com/api/Sql/Execute`, payload, this.CreateRequest("POST"));
+        let response = await PostAsync(this, `https://${this.region}-${this.stage}-queryexec.heflo.com/api/Sql/Execute`, payload, this.CreateRequest("POST"));
         let result: QueryResult = response.data;
 
         if (result.Error)
@@ -440,7 +440,7 @@ export class Context {
             Parameters: JSON.stringify(parameters)
         }
 
-        let response = await PostAsync(context, `http://${context.region}-${context.stage}-queryexec.heflo.com/api/Sql/Execute`, payload, context.CreateRequest("POST"));
+        let response = await PostAsync(context, `https://${context.region}-${context.stage}-queryexec.heflo.com/api/Sql/Execute`, payload, context.CreateRequest("POST"));
         let result: QueryResult = response.data;
 
         if (result.Error)
