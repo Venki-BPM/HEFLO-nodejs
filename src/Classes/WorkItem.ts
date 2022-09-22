@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { Context } from '../Context';
 import { CustomType, BaseModel } from '../BaseModel';
 import { Metadata } from '../Metadata';
@@ -6,6 +5,7 @@ import { Process } from './Process';
 import { Person } from './Person';
 import { Token } from './Token';
 import { Guid, IDictionary, Status } from '../Types';
+import { PostAsync, GetAsync } from './../Helpers/Rest';
 
 export class WorkItem extends BaseModel {
     public static ClassOid = "7a767398-3c6e-4d81-8c04-369600dcb4a7";
@@ -173,7 +173,7 @@ export class WorkItem extends BaseModel {
                         Properties: JSON.stringify(props),
                         NotifyChanges: true
                     }
-                    await axios.post(`${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
+                    await PostAsync(context, `${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
 
                     if (token.CurrentTokenExecution) {
 
@@ -183,7 +183,7 @@ export class WorkItem extends BaseModel {
                             Properties: JSON.stringify(props),
                             NotifyChanges: false
                         }
-                        await axios.post(`${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
+                        await PostAsync(context, `${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
                     }
                 };
             };
@@ -197,7 +197,7 @@ export class WorkItem extends BaseModel {
             detailLink: detailLink
         }
 
-        await axios.post(`${this.context.StorageRelational}odata/WorkItem/DataServiceControllers.LogError`, payload, this.context.CreateRequest("POST"));
+        await PostAsync(this.context, `${this.context.StorageRelational}odata/WorkItem/DataServiceControllers.LogError`, payload, this.context.CreateRequest("POST"));
     }
 
     public async LogInformationAsync(message: string) {
@@ -207,7 +207,7 @@ export class WorkItem extends BaseModel {
             type: 0
         }
 
-        await axios.post(`${this.context.StorageRelational}odata/WorkItem/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
+        await PostAsync(this.context, `${this.context.StorageRelational}odata/WorkItem/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
     }
 
     public async LogWarningAsync(message: string) {
@@ -217,23 +217,23 @@ export class WorkItem extends BaseModel {
             type: 2
         }
 
-        await axios.post(`${this.context.StorageRelational}odata/WorkItem/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
+        await PostAsync(this.context, `${this.context.StorageRelational}odata/WorkItem/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
     }
 
     public static async EvaluateBRAsync(context: Context, oid: number, br: string) {
-        var result = await axios.get(`${context.StorageRelational}odata/WorkItem(${oid}L)/DataServiceControllers.EvaluateBR?brOid=${br}`, context.CreateRequest("GET"));
+        var result = await GetAsync(context, `${context.StorageRelational}odata/WorkItem(${oid}L)/DataServiceControllers.EvaluateBR?brOid=${br}`, context.CreateRequest("GET"));
         return result.data.value;
     }
 
     public static async RestartAsync(context: Context, oid: number) {
-        await axios.post(`${context.StorageRelational}odata/WorkItem(${oid}L)/DataServiceControllers.Restart`, {}, context.CreateRequest("POST"));
+        await PostAsync(context, `${context.StorageRelational}odata/WorkItem(${oid}L)/DataServiceControllers.Restart`, {}, context.CreateRequest("POST"));
     }
 
     public static async ForceBoundaryAsync(context: Context, oid: number, code: string) {
         let payload = {
             code: code
         }
-        await axios.post(`${context.StorageRelational}odata/WorkItem(${oid}L)/DataServiceControllers.ForceBoundary`, payload, context.CreateRequest("POST"));
+        await PostAsync(context, `${context.StorageRelational}odata/WorkItem(${oid}L)/DataServiceControllers.ForceBoundary`, payload, context.CreateRequest("POST"));
     }
 
     public AddComment(message: string) {

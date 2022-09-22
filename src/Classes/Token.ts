@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { Context } from '../Context';
 import { BaseModel } from '../BaseModel';
 import { WorkItem } from './WorkItem';
@@ -8,6 +7,7 @@ import { IDictionary, TokenStatus } from '../Types';
 import { Person } from './Person';
 import { Group } from './Group';
 import { Metadata } from './../Metadata';
+import { PostAsync } from './../Helpers/Rest';
 
 export class Token extends BaseModel {
     public static ClassOid = "78e3a4c9-8885-415d-bba1-1970e4d1cf97";
@@ -192,7 +192,7 @@ export class Token extends BaseModel {
             detailLink: detailLink
         }
 
-        await axios.post(`${this.context.StorageRelational}odata/Token/DataServiceControllers.LogError`, payload, this.context.CreateRequest("POST"));
+        await PostAsync(this.context, `${this.context.StorageRelational}odata/Token/DataServiceControllers.LogError`, payload, this.context.CreateRequest("POST"));
     }
 
     public async LogInformationAsync(message: string) {
@@ -202,7 +202,7 @@ export class Token extends BaseModel {
             type: 0
         }
 
-        await axios.post(`${this.context.StorageRelational}odata/Token/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
+        await PostAsync(this.context, `${this.context.StorageRelational}odata/Token/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
     }
 
     public async LogWarningAsync(message: string) {
@@ -212,7 +212,7 @@ export class Token extends BaseModel {
             type: 2
         }
 
-        await axios.post(`${this.context.StorageRelational}odata/Token/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
+        await PostAsync(this.context, `${this.context.StorageRelational}odata/Token/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
     }
 
     public async SaveAsync(context: Context): Promise<number | string | undefined> {                
