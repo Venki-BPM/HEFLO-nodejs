@@ -382,10 +382,13 @@ export class Context {
         if (page <= 0)
             throw "The page index must be greater or equal to 1";
 
+        if (!sql)
+            throw "The SQL command can not be undefined";
+
         if (!parameters) parameters = [];
         let hashCode = (s) => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
         
-        let cacheKey = `${hashCode(this.Domain)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => (i || "__$null$__").toString()).join('-'))}`;
+        let cacheKey = `${hashCode(this.Domain)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => ( `${i.name}=${i.value || "__$null$__"}`).toString()).join('-'))}`;
         let resultSet = Context.queryCache.get(cacheKey) as Array<any>;
         if (resultSet && !avoidCache) {
             if (process.env.DEBUG) console.log(`Cache hit for ${sql}`);
@@ -421,10 +424,22 @@ export class Context {
         if (page <= 0)
             throw "The page index must be greater or equal to 1";
 
+        if (!environment)
+            throw "The environment can not be undefined";
+
+        if (!apiKey)
+            throw "The API key can not be undefined";
+
+        if (!secretKey)
+            throw "The Secret key can not be undefined";
+
+        if (!sql)
+            throw "The SQL command can not be undefined";
+
         if (!parameters) parameters = [];
         let hashCode = (s) => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
         
-        let cacheKey = `${hashCode(environment)}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => (i || "__$null$__").toString()).join('-'))}`;
+        let cacheKey = `${environment ? hashCode(environment) : ""}-${page}-${itemsPerPage}-${hashCode(`${sql}`)}-${hashCode(parameters.map(i => ( `${i.name}=${i.value || "__$null$__"}`).toString()).join('-'))}`;
         let resultSet = Context.queryCache.get(cacheKey) as Array<any>;
         if (resultSet && !avoidCache) {
             if (process.env.DEBUG) console.log(`Cache hit for ${sql}`);
