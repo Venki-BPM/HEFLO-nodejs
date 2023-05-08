@@ -20,13 +20,13 @@ app.post('/OnExecute', async (request, response) => {
     // Access all data of the process instance
     let context = new Events.WorkItem.OnExecuteSequenceFlow(request);
 
-    // Yout code here
+    // Your code here
 
     // Finally, return unsaved data.  
     response.json(context.GetModifiedData());
   } catch (err) {
     response.status(500);
-    esponse.send("Error executing the request, details: " + err);
+    response.send("Error executing the request, details: " + err);
   }
 });
 ```
@@ -42,11 +42,11 @@ app.post('/onChanged', async (request, response) => {
     // change another field
     context.WorkItem.Set("OtherField", "Field changed");
 
-      // Finally, return unsaved data.  
+    // Finally, return unsaved data.  
     response.json(context.GetModifiedData());
   } catch (err) {
     response.status(500);
-    esponse.send("Error executing the request, details: " + err);
+    response.send("Error executing the request, details: " + err);
   }
 });
 ```
@@ -65,7 +65,7 @@ app.post('/OnResourceCalculation', async (request, response) => {
     response.json( [ "email1@mycompany.com", "email2@mycompany.com", ["name-of-department-or-group"] ] );
   } catch (err) {
     response.status(500);
-    esponse.send("Error executing the request, details: " + err);
+    response.send("Error executing the request, details: " + err);
   }
 });
 ```
@@ -88,7 +88,7 @@ app.post('/OnExecute', async (request, response) => {
     response.json("{}");
   } catch (err) {
     response.status(500);
-    esponse.send("Error executing the request, details: " + err);
+    response.send("Error executing the request, details: " + err);
   }
 });
 ```
