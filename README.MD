@@ -82,7 +82,7 @@ app.post('/OnExecute', async (request, response) => {
     person.Name = context.WorkItem.Get("name_person");
     person.Email = context.WorkItem.Get("email_person");
     // save the record using async 
-    await pessoa.SaveAsync(context);
+    await person.SaveAsync(context);
 
     // No need to return modified data
     response.json("{}");
