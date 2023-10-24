@@ -14,19 +14,36 @@ export class Person extends Account {
         this.classOid = Person.ClassOid;
     }
 
+    /**
+    * Set the value of a custom field.
+    * @param {string} fieldName - Name or alias of the field. (click the script icon in the edition dialog)
+    * @param {any} value - Current value of the custom field.
+    */
     public Set(fieldName: string, value: any) {
         this.LogChange(Person.ClassOid, fieldName, this.oid, value);
     }
 
+    /**
+    * Get the identifier of the account department
+    */
     public get DepartmentOid(): number | undefined {
         return this.departmentOid;
     }
 
+    /**
+    * Set the identifier of the account department
+    */
     public set DepartmentOid(value: number | undefined) {
         this.departmentOid = value;
         this.context.addChange(Person.ClassOid, "DepartmentOid", this.oid, value);
     }
     
+    /**
+    * Find a person by an identifier
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {number} id - Identifier of the instance.
+    * @returns Object instance of a person.
+    */
     public static async FindAsync(context: Context, id: number): Promise<Person> {
         return <Person>(await context.FindAsync(`${context.StorageRelational}odata/Person(${id})?$select=Oid,Name,Email,DepartmentOid&$selectCustom=true`, 
             Person.ClassOid, (data: Array<any>) => { return Person.Parse(context, data); } ));
@@ -51,6 +68,10 @@ export class Person extends Account {
         }
     }
 
+    /**
+    * Save all pending changes of the person.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    */
     public async SaveAsync(context: Context): Promise<number> {
 
         if (this.isNew) {
@@ -77,6 +98,11 @@ export class Person extends Account {
             return `${this.context.StorageRelational}odata/Person`;
     } 
 
+    /**
+    * Create a new instance of a person and initialize all metadata to it.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @returns Object instance of a person
+    */
     public static async NewAsync(context: Context): Promise<Person> {
         await Metadata.CheckAsync(context, Person.ClassOid);
         let person = new Person(context);

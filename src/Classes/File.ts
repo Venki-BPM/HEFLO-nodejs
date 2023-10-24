@@ -27,10 +27,16 @@ export class File extends BaseModel {
         }
     }
 
+    /**
+    * Get the url of the file
+    */
     public get Url() {
         return this.url;
     }
 
+    /**
+    * Get the filename of the file
+    */
     public get Filename() {
         return this.filename;
     }

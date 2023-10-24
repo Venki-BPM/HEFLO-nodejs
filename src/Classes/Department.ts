@@ -18,36 +18,62 @@ export class Department extends BaseModel {
         this.classOid = Department.ClassOid;
     }
 
+    /**
+    * Get the identifier of the object
+    */
     protected GetKey(): string | number {
         return this.oid;
     }
 
+    /**
+    * Set the value of a custom field.
+    * @param {string} fieldName - Name or alias of the field. (click the script icon in the edition dialog)
+    * @param {any} value - Current value of the custom field.
+    */
     public Set(fieldName: string, value: any) {
         this.LogChange(Department.ClassOid, fieldName, this.oid, value);
     }
 
+    /**
+    * Get the identifier of the department
+    */
     public get Oid(): number {
         return this.oid;
     }
 
+    /**
+    * Get the name of the department
+    */
     public get Name(): string {
         return this.name;
     }
 
+    /**
+    * Set the name of the department
+    */
     public set Name(value: string) {
         this.name = value;
         this.context.addChange(Department.ClassOid, "Name", this.oid, value);
     }
 
+    /**
+    * Get the identifier of the department manager
+    */
     public get ManagerOid(): number | undefined {
         return this.managerOid;
     }
 
+    /**
+    * Set the identifier of the department manager
+    */
     public set ManagerOid(value: number | undefined) {
         this.managerOid = value;
         this.context.addChange(Department.ClassOid, "ManagerOid", this.oid, value);
     }
 
+    /**
+    * Get the instance of the department manager
+    */
     public async GetManagerAsync(context: Context): Promise<Person | undefined> {
         if (this.managerOid)
             return Person.FindAsync(context, this.managerOid);
@@ -55,15 +81,24 @@ export class Department extends BaseModel {
         return undefined;
     }
 
+    /**
+    * Get the identifier of the parent department
+    */
     public get ParentDepartmentOid(): number | undefined {
         return this.parentDepartmentOid;
     }
 
+    /**
+    * Set the identifier of the parent department
+    */
     public set ParentDepartmentOid(value: number | undefined) {
         this.parentDepartmentOid = value;
         this.context.addChange(Department.ClassOid, "ParentDepartmentOid", this.oid, value);
     }
 
+    /**
+    * Get the instance of the parent department
+    */
     public async GetParentDepartmentAsync(context: Context): Promise<Department | undefined> {
         if (this.parentDepartmentOid)
             return Department.FindAsync(context, this.parentDepartmentOid);
@@ -71,15 +106,27 @@ export class Department extends BaseModel {
         return undefined;
     }
 
+    /**
+    * Get the code of the department
+    */
     public get Code(): string {
         return this.code;
     }
 
+    /**
+    * Set the code of the department
+    */
     public set Code(value: string) {
         this.code = value;
         this.context.addChange(Department.ClassOid, "Code", this.oid, value);
     }
 
+    /**
+    * Find a department by an identifier
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {number} id - Identifier of the instance.
+    * @returns Object instance of a department.
+    */
     public static async FindAsync(context: Context, id: number): Promise<Department> {
         return <Department>(await context.FindAsync(`${context.StorageRelational}odata/Department(${id})?$select=Oid,Name,ManagerOid,ParentDepartmentOid,Code&$selectCustom=true`,
             Department.ClassOid, (data: Array<any>) => { return Department.Parse(context, data); }));
@@ -108,6 +155,10 @@ export class Department extends BaseModel {
         }
     }
 
+    /**
+    * Save all pending changes of the department.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    */
     public async SaveAsync(context: Context): Promise<number | string> {
 
         if (this.isNew) {
@@ -135,6 +186,11 @@ export class Department extends BaseModel {
             return `${this.context.StorageRelational}odata/Department`;
     }
 
+    /**
+    * Create a new instance of a department and initialize all metadata to it.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @returns Object instance of a department
+    */
     public static async NewAsync(context: Context): Promise<Department> {
         await Metadata.CheckAsync(context, Department.ClassOid);
         let department = new Department(context);

@@ -12,6 +12,9 @@ export class ProcessVersion extends BaseModel {
         this.classOid = ProcessVersion.ClassOid;
     }
 
+    /**
+    * Get the identifier of the object
+    */
     protected GetKey(): string | number {
         return this.Oid;
     }

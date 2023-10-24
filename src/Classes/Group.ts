@@ -14,6 +14,11 @@ export class Group extends Account {
         this.classOid = Group.ClassOid;
     }
 
+    /**
+    * Set the value of a custom field.
+    * @param {string} fieldName - Name or alias of the field. (click the script icon in the edition dialog)
+    * @param {any} value - Current value of the custom field.
+    */
     public Set(fieldName: string, value: any) {
         this.LogChange(Group.ClassOid, fieldName, this.oid, value);
     }
@@ -51,6 +56,10 @@ export class Group extends Account {
         }
     }
 
+    /**
+    * Save all pending changes of the group.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    */
     public async SaveAsync(context: Context): Promise<number> {
 
         if (this.isNew) {
@@ -77,6 +86,11 @@ export class Group extends Account {
             return `${this.context.StorageRelational}odata/Group`;
     } 
 
+    /**
+    * Create a new instance of an Group and initialize all metadata to it.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @returns Object instance of a group
+    */
     public static async NewAsync(context: Context): Promise<Group> {
         await Metadata.CheckAsync(context, Group.ClassOid);
         let group = new Group(context);

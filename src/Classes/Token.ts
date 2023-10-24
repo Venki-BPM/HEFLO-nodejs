@@ -29,6 +29,9 @@ export class Token extends BaseModel {
         this.classOid = Token.ClassOid;
     }
 
+    /**
+    * Get the identifier of the object
+    */
     protected GetKey(): string | number {
         return this.oid;
     }
@@ -41,16 +44,29 @@ export class Token extends BaseModel {
         return this.workItem;
     }
 
+    /**
+    * Get the value of a custom field.
+    * @param {string} fieldName - Name or alias of the field. (click the script icon in the edition dialog)
+    * @returns - Current value of the custom field.
+    */
     public Get(fieldName: string) {
         if (this.workItem)
             return this.workItem.Get(fieldName);
     }
 
+    /**
+    * Set the value of a custom field.
+    * @param {string} fieldName - Name or alias of the field. (click the script icon in the edition dialog)
+    * @param {any} value - Current value of the custom field.
+    */
     public Set(fieldName: string, value: any) {
         if (this.workItem)
             this.workItem.Set(fieldName, value);
     }
 
+    /**
+    * Identifier of the token
+    */
     public get Oid(): number {
         return this.oid;
     }
@@ -68,18 +84,30 @@ export class Token extends BaseModel {
         this.context.addChange(Token.ClassOid, "Subject", this.oid, value);
     }
 
+    /**
+    * Get the start date and time of the token
+    */
     public get StartDate(): Date | undefined {
         return this.startDate;
     }
 
+    /**
+    * Get the end date and time of the token
+    */
     public get EndDate(): Date | undefined {
         return this.endDate;
     }
 
+    /**
+    * Get the current task execution data of the token
+    */
     public get CurrentTokenExecution(): string | undefined {
         return this.currentTokenExecution;
     }
     
+    /**
+    * Get the status of the work item.
+    */
     public get Status(): TokenStatus | undefined {
         return this.status;
     }
@@ -121,6 +149,9 @@ export class Token extends BaseModel {
         }
     }
 
+    /**
+    * Get the instance of the current user in charge of the token.
+    */
     public async GetResponsibleAsync(context: Context): Promise<Account | undefined> {
         if (this.responsibleOid)
             return Account.FindAsync(context, this.responsibleOid);
@@ -128,6 +159,9 @@ export class Token extends BaseModel {
             return undefined;
     }
 
+    /**
+    * Get the instance of the flow element of the current task.
+    */
     public async GetCurrentFlowElementAsync(context: Context): Promise<FlowElement | undefined> {
         if (this.currentFlowElementOid)
             return FlowElement.FindAsync(context, this.currentFlowElementOid);
@@ -135,6 +169,11 @@ export class Token extends BaseModel {
             return undefined;
     }
 
+    /**
+    * Calculate the participant.
+    * @param {string} resourceName - Name of the participant.
+    * @returns Array of groups of people related with the participant definition.
+    */
     public async CalcResourceAsync(resourceName: string): Promise<Array<Account>> {
         await Metadata.CheckAsync(this.context, Person.ClassOid);
         await Metadata.CheckAsync(this.context, Group.ClassOid);
@@ -149,11 +188,21 @@ export class Token extends BaseModel {
         } ));
     }
 
+    /**
+    * Add a comment in the Conversation tab.
+    * @param {string} message - Content of the comment.
+    */
     public AddComment(message: string) {
         if (this.workItem)
             this.context.addComment(message, this.workItem, this);
     }
    
+    /**
+    * Find a token by an identifier
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {number} id - Identifier of the instance.
+    * @returns Object instance of a token.
+    */
     public static async FindAsync(context: Context, id: number): Promise<Token> {
         return <Token>(await context.FindAsync(`${context.StorageRelational}odata/Token(${id})?$expand=WorkItem,Activities($orderby=StartDate%20desc)&$selectCustom=true`,
             Token.ClassOid, (data: Array<any>) => { 

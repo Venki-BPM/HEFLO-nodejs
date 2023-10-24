@@ -13,18 +13,30 @@ export class FlowElement extends BaseModel {
         this.classOid = FlowElement.ClassOid;
     }
 
+    /**
+    * Get the identifier of the object
+    */
     protected GetKey(): string | number {
         return this.oid;
     }
 
+    /**
+    * Get the identifier of the flow element
+    */
     public get Oid(): number {
         return this.oid;
     }
 
+    /**
+    * Get the label of the flow element
+    */
     public get Label(): string | undefined {
         return this.label;
     }
 
+    /**
+    * Get the unique code of the flow element. This code is used in many tasks of customization or reports.
+    */
     public get UniqueCode(): string | undefined {
         return this.uniqueCode;
     }
@@ -44,6 +56,12 @@ export class FlowElement extends BaseModel {
         }
     }
 
+    /**
+    * Find a flow element by an identifier
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {number} id - Identifier of the instance.
+    * @returns Object instance of a flow element.
+    */
     public static async FindAsync(context: Context, id: number): Promise<FlowElement> {
         return <FlowElement>(await context.FindAsync(`${context.CacheRelational}odata/FlowElement(${id})?$select=Oid,Label,UniqueCode&$selectCustom=true`, 
             FlowElement.ClassOid, (data: Array<any>) => { return FlowElement.Parse(context, data); } ));
