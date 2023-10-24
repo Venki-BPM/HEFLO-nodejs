@@ -17,31 +17,54 @@ export class Process extends BaseModel {
         this.classOid = Process.ClassOid;
     }
 
+    /**
+    * Get the identifier of the object
+    */
     protected GetKey(): string | number {
         return this.oid;
     }
 
+    /**
+    * Set the value of a custom field.
+    * @param {string} fieldName - Name or alias of the field. (click the script icon in the edition dialog)
+    * @param {any} value - Current value of the custom field.
+    */
     public Set(fieldName: string, value: any) {
         this.LogChange(Process.ClassOid, fieldName, this.oid, value);
     }
 
+    /**
+    * Get the identifier of the process
+    */
     public get Oid(): number {
         return this.oid;
     }
 
+    /**
+    * Get the name of the process
+    */
     public get Name(): string {
         return this.name;
     }
 
+    /**
+    * Get the identifier of the process owner
+    */
     public get OwnerOid(): number | undefined {
         return this.ownerOid;
     }
 
+    /**
+    * Set the identifier of the process owner
+    */
     public set OwnerOid(value: number | undefined) {
         this.ownerOid = value;
         this.context.addChange(Process.ClassOid, "OwnerOid", this.oid, value);
     }
 
+    /**
+    * Get the instance of the process owner
+    */
     public async GetOwnerAsync(context: Context): Promise<Person | undefined> {
         if (this.ownerOid)
             return Person.FindAsync(context, this.ownerOid);
@@ -54,6 +77,12 @@ export class Process extends BaseModel {
             ProcessVersion.ClassOid, (data: Array<any>) => { return ProcessVersion.Parse(context, data); }));
     }
 
+    /**
+    * Find a process by an identifier
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {number} id - Identifier of the instance.
+    * @returns Object instance of a process.
+    */
     public static async FindAsync(context: Context, id: number): Promise<Process> {
         return <Process>(await context.FindAsync(`${context.CacheRelational}odata/Process(${id})?$select=Oid,Name,OwnerOid&$selectCustom=true`,
             Process.ClassOid, (data: Array<any>) => { return Process.Parse(context, data); }));
