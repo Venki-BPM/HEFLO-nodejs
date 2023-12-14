@@ -179,6 +179,12 @@ export class Context {
         }
     }
 
+    public removeRecordChange(className: string, propertyName: string, key: string | number) {
+        if (key) {
+            this.changes = this.changes.filter(i => i.ClassName == className && i.Key == key && i.PropertyName == propertyName);
+        }
+    }
+
     public addComment(message: string, workItem: WorkItem, token?: Token) {
         if (message && workItem) {
             this.comments.push({

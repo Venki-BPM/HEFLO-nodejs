@@ -204,6 +204,7 @@ export class BaseModel {
             for(i=0; i<list.length; i++) {
                 let element = list[i];
                 await element.SaveAsync(context, entityId, element.Oid || element.fields["Oid"]);
+                this.context.removeRecordChange(this.classOid, actualName, this.GetKey());
                 oids.push(element.Oid || element.fields["Oid"]);
             }
 
