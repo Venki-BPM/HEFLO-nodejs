@@ -97,7 +97,7 @@ export class Context {
     private cacheRelational: string;
     private storageNoSQL: string;
     private cacheNoSQL: string;
-    private cache: NodeCache = new NodeCache( { deleteOnExpire: true, stdTTL: 600 } );
+    private cache: NodeCache = new NodeCache( { useClones: false, deleteOnExpire: true, stdTTL: 600 } );
     private apiKey: string;
     private secretKey: string;
     private environment: string;
@@ -372,7 +372,7 @@ export class Context {
         return body.join('\r\n');
     }
 
-    private static queryCache = new NodeCache( { checkperiod: 30 } );
+    private static queryCache = new NodeCache( { useClones: false, checkperiod: 30 } );
 
     public async QueryAsync(sql: string, page: number, itemsPerPage: number, parameters: Array<QueryParam>, avoidCache: boolean = false): Promise<Array<any>> {
 
