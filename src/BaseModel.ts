@@ -196,15 +196,15 @@ export class BaseModel {
         let actualName = Metadata.GetPropertyName(this.context, this.classOid, fieldName);
         if (!actualName)
             throw `Field ${fieldName} not found`;
-
+        let entityId = Metadata.GetListEntity(this.context, this.classOid, actualName);
         if (this.lists[actualName]) {
             let oids: Array<string> = [];
             let list: Array<CustomType> = this.lists[actualName];
             let i = 0;
             for(i=0; i<list.length; i++) {
                 let element = list[i];
-                await element.SaveAsync(context);
-                oids.push(element.Oid);
+                await element.SaveAsync(context, entityId, element.Oid || element.fields["Oid"]);
+                oids.push(element.Oid || element.fields["Oid"]);
             }
 
             this.LogChange(this.classOid, fieldName, this.GetKey().toString(), oids.join(','));
