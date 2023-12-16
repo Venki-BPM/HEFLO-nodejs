@@ -179,9 +179,9 @@ export class Context {
         }
     }
 
-    public removeRecordChange(className: string, propertyName: string, key: string | number) {
+    public removeRecordChange(className: string, key: string | number) {
         if (key) {
-            this.changes = this.changes.filter(i => i.ClassName == className && i.Key == key && i.PropertyName == propertyName);
+            this.changes = this.changes.filter(i => !(i.ClassName == className && i.Key == key));
         }
     }
 
@@ -305,8 +305,10 @@ export class Context {
 
         let delta: Array<DeltaItem> = [];
         this.changes.forEach(field => {
-            if (className === undefined || (className === field.ClassName && key === field.Key)) {
-                delta.push(field);
+            if (key) {
+                if (className === undefined || (className === field.ClassName && key.toString() === field.Key)) {
+                    delta.push(field);
+                }
             }
         });
         
