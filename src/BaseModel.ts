@@ -203,9 +203,10 @@ export class BaseModel {
             let i = 0;
             for(i=0; i<list.length; i++) {
                 let element = list[i];
-                await element.SaveAsync(context, entityId, element.Oid || element.fields["Oid"]);
-                this.context.removeRecordChange(this.classOid, actualName, this.GetKey());
-                oids.push(element.Oid || element.fields["Oid"]);
+                const elementOid = element.Oid || element.fields["Oid"];
+                await element.SaveAsync(context, entityId, elementOid);
+                this.context.removeRecordChange(entityId, elementOid);
+                if (oids.filter(i => i === elementOid).length === 0) oids.push(elementOid);
             }
 
             this.LogChange(this.classOid, fieldName, this.GetKey().toString(), oids.join(','));
