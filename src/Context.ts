@@ -352,6 +352,8 @@ export class Context {
                     content.push(`"${field.PropertyName}": null`)
                 else if (field.Value instanceof Date)
                     content.push(`"${field.PropertyName}": "${field.Value.toISOString()}"`);
+                else if (field.Value === '')
+                    content.push("\"" + field.PropertyName + "\": ''");
                 else if (!isNaN(+field.Value))
                     content.push(`"${field.PropertyName}": ${field.Value}`)
                 else
