@@ -305,8 +305,8 @@ export class Context {
 
         let delta: Array<DeltaItem> = [];
         this.changes.forEach(field => {
-            if (key) {
-                if (className === undefined || (className === field.ClassName && key.toString() === field.Key)) {
+            if (key && field.Key) {
+                if (className === undefined || (className === field.ClassName && key.toString() === field.Key.toString())) {
                     delta.push(field);
                 }
             }

@@ -112,6 +112,13 @@ export class Token extends BaseModel {
         return this.status;
     }
 
+    /**
+    * Get type of Token
+    */
+    public get SourceType(): string | undefined {
+        return this.sourceType;
+    }
+
     public static Parse(context: Context, data: Array<any>): Token {
         let obj = new Token(context);
         obj.Parse(data);        

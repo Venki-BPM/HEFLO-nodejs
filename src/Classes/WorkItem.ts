@@ -217,7 +217,10 @@ export class WorkItem extends BaseModel {
         
         for(let i=0; i<tokens.length; i++) {
             let token = tokens[i];
-            await context.PatchAsync(this.context.StorageRelational, this.classOid, this.GetKey(), [`WorkItem(${this.oid}L)`, `Token(${token.Oid}L)`, `TokenExecution(${token.CurrentTokenExecution})`]);
+            if (token.SourceType === "AdHocSubprocess")
+                await context.PatchAsync(this.context.StorageRelational, this.classOid, this.GetKey(), [`Token(${token.Oid}L)`, `TokenExecution(${token.CurrentTokenExecution})`]);
+            else
+                await context.PatchAsync(this.context.StorageRelational, this.classOid, this.GetKey(), [`WorkItem(${this.oid}L)`, `Token(${token.Oid}L)`, `TokenExecution(${token.CurrentTokenExecution})`]);
         };
         
         return this.oid;
