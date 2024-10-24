@@ -240,30 +240,28 @@ export class WorkItem extends BaseModel {
         if (actualName && this.lists[actualName]) {
             let oids: Array<string> = (<Array<CustomType>>this.lists[actualName]).map(item => item.Oid);
             let tokens = await Token.GetTokensAsync(context, this.oid);
-            for(let i=0; i<tokens.length; i++) {
+            for (let i = 0; i < tokens.length; i++) {
                 let token = tokens[i];
-                if (oids.length) {
-                    let props: any = {};
-                    props[<string>actualName] = oids.join(',');
-                    let payload = {
-                        ClassOid: Token.ClassOid,
-                        InstanceOid: token.Oid.toString(),
+                let props: any = {};
+                props[<string>actualName] = oids.length ? oids.join(',') : "";
+                let payload = {
+                    ClassOid: Token.ClassOid,
+                    InstanceOid: token.Oid.toString(),
+                    Properties: JSON.stringify(props),
+                    NotifyChanges: true
+                }
+                await PostAsync(context, `${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
+
+                if (token.CurrentTokenExecution) {
+
+                    payload = {
+                        ClassOid: WorkItem.TokenExecutionClassOid,
+                        InstanceOid: token.CurrentTokenExecution.toString(),
                         Properties: JSON.stringify(props),
-                        NotifyChanges: true
+                        NotifyChanges: false
                     }
                     await PostAsync(context, `${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
-
-                    if (token.CurrentTokenExecution) {
-
-                        payload = {
-                            ClassOid: WorkItem.TokenExecutionClassOid,
-                            InstanceOid: token.CurrentTokenExecution.toString(),
-                            Properties: JSON.stringify(props),
-                            NotifyChanges: false
-                        }
-                        await PostAsync(context, `${context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.AddOrReplaceCustomProperty`, payload, context.CreateRequest("POST"));
-                    }
-                };
+                }
             };
         }
     }
