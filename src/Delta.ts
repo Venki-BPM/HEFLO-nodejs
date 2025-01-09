@@ -1,4 +1,9 @@
-
+export interface Delta {
+    RefreshArguments: boolean;
+    Changes: Array<DeltaItem>;
+    Comments: Array<WorkItemComment>;
+    Options: GetModifiedDataOptions;
+}
 export interface DeltaItem {
     Id: string;
     ClassName: string;
@@ -12,13 +17,6 @@ export interface WorkItemComment {
     Message: string;
     WorkItemOid: number;
     TokenOid?: number;
-}
-
-export interface Delta {
-    RefreshArguments: boolean;
-    Changes: Array<DeltaItem>;
-    Comments: Array<WorkItemComment>;
-    Options: GetModifiedDataOptions;
 }
 
 export interface GetModifiedDataOptions {

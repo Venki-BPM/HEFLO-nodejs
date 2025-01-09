@@ -4,6 +4,9 @@ import { ProcessVersion } from './ProcessVersion';
 import { Person } from './Person';
 import { IDictionary } from '../Types';
 
+/**
+* A Process represents an automated business workflow.
+*/
 export class Process extends BaseModel {
     public static ClassOid = "82b7b003-ace3-4a5b-a20b-5acae69702ea";
     public static ClassName = "Venki.Process.Process";
@@ -12,6 +15,10 @@ export class Process extends BaseModel {
     protected name: string = "";
     protected ownerOid?: number;
 
+    /**
+     * Create a new instance of the type Process. This constructor is used by the library's code and should not be used by API users.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     */
     constructor(context: Context) {
         super(context);
         this.classOid = Process.ClassOid;
@@ -81,19 +88,29 @@ export class Process extends BaseModel {
     * Find a process by an identifier
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
     * @param {number} id - Identifier of the instance.
-    * @returns Object instance of a process.
+    * @returns Promise to get the object instance of a process.
     */
     public static async FindAsync(context: Context, id: number): Promise<Process> {
         return <Process>(await context.FindAsync(`${context.CacheRelational}odata/Process(${id})?$select=Oid,Name,OwnerOid&$selectCustom=true`,
             Process.ClassOid, (data: Array<any>) => { return Process.Parse(context, data); }));
     }
 
+    /**
+    * Load the object's content from JSON data.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {Array<any>} data - An array of key-value pairs (JSON data).
+    * @returns Object instance initialized.
+    */
     public static Parse(context: Context, data: Array<any>): Process {
         let obj = new Process(context);
         obj.Parse(data);
         return obj;
     }
 
+    /**
+    * Populate the object's fields with data from the record.
+    * @param {IDictionary} data - A dictionary holding the record's data.
+    */
     public Parse(data: IDictionary) {
         super.Parse(data);
         if (data) {

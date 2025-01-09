@@ -3,6 +3,9 @@ import { Metadata } from '../Metadata';
 import { Department } from '../Classes/Department';
 import { CustomType } from '../BaseModel';
 
+/**
+ * Contextual information for customizations triggered in the Department's edit interface.
+ */
 export class DepartmentContext extends Context {
     private department: Department;
 
@@ -11,6 +14,9 @@ export class DepartmentContext extends Context {
         this.department = Department.Parse(this, request.body["Entity"]);
     }
 
+    /**
+     * Get the Department in edition.
+     */
     public get Department(): Department {
         return this.department;
     }

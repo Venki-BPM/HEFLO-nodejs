@@ -9,6 +9,9 @@ import { Group } from './Group';
 import { Metadata } from './../Metadata';
 import { PostAsync } from './../Helpers/Rest';
 
+/**
+* A Token is a concurrent component of a WorkItem. Typically, it is linked to the current task and associated with the user responsible for that task.
+*/
 export class Token extends BaseModel {
     public static ClassOid = "78e3a4c9-8885-415d-bba1-1970e4d1cf97";
     protected oid: number = 0;
@@ -24,6 +27,10 @@ export class Token extends BaseModel {
     protected sourceType?: string;
     protected status?: TokenStatus;
 
+    /**
+     * Create a new instance of the type Token. This constructor is used by the library's code and should not be used by API users.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     */
     constructor (context: Context) {
         super(context);
         this.classOid = Token.ClassOid;
@@ -36,10 +43,16 @@ export class Token extends BaseModel {
         return this.oid;
     }
 
+    /**
+    * Assign a reference to the process instance.
+    */
     public set WorkItem(value: WorkItem | undefined) {
         this.workItem = value;
     }
 
+    /**
+    * Obtain a reference to the process instance.
+    */
     public get WorkItem(): WorkItem | undefined {
         return this.workItem;
     }
@@ -65,20 +78,30 @@ export class Token extends BaseModel {
     }
 
     /**
-    * Identifier of the token
+    * Get the identifier of the token
     */
     public get Oid(): number {
         return this.oid;
     }
 
+    /**
+    * Get the Number of the token
+    */
     public get Number(): string {
         return this.number;
     }
 
+    /**
+    * Get the subject of the token
+    */
     public get Subject(): string {
         return this.subject;
     }
 
+    /**
+    * Set the identifier of the token
+    * @param {string} value - The new content for the field Subject.
+    */
     public set Subject(value: string) {
         this.subject = value;
         this.context.addChange(Token.ClassOid, "Subject", this.oid, value);
@@ -119,12 +142,22 @@ export class Token extends BaseModel {
         return this.sourceType;
     }
 
+    /**
+    * Load the object's content from JSON data.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {Array<any>} data - An array of key-value pairs (JSON data).
+    * @returns Object instance initialized.
+    */
     public static Parse(context: Context, data: Array<any>): Token {
         let obj = new Token(context);
         obj.Parse(data);        
         return obj;
     }
 
+    /**
+    * Populate the object's fields with data from the record.
+    * @param {IDictionary} data - A dictionary holding the record's data.
+    */
     public Parse(data: IDictionary) {
         super.Parse(data);
         if (data) {
@@ -179,7 +212,7 @@ export class Token extends BaseModel {
     /**
     * Calculate the participant.
     * @param {string} resourceName - Name of the participant.
-    * @returns Array of groups of people related with the participant definition.
+    * @returns Promise to get the array of groups of people related with the participant definition.
     */
     public async CalcResourceAsync(resourceName: string): Promise<Array<Account>> {
         await Metadata.CheckAsync(this.context, Person.ClassOid);
@@ -208,7 +241,7 @@ export class Token extends BaseModel {
     * Find a token by an identifier
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
     * @param {number} id - Identifier of the instance.
-    * @returns Object instance of a token.
+    * @returns Promise to get the object instance of a token.
     */
     public static async FindAsync(context: Context, id: number): Promise<Token> {
         return <Token>(await context.FindAsync(`${context.StorageRelational}odata/Token(${id})?$expand=WorkItem,Activities($orderby=StartDate%20desc)&$selectCustom=true`,
@@ -222,6 +255,12 @@ export class Token extends BaseModel {
         } ));
     }
 
+    /**
+    * Get a list of all tokens of the same WorkItem.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {number} workItemOid - Identifier of the WorkItem.
+    * @returns Promise to get a list of tokens.
+    */
     public static async GetTokensAsync(context: Context, workItemOid: number): Promise<Array<Token>> {
         return <Array<Token>>(await context.FindAllAsync(`${context.StorageRelational}odata/Token?$expand=WorkItem,Activities($orderby=StartDate%20desc)&$filter=(WorkItemOid+eq+${workItemOid})&$selectCustom=true`,
             Token.ClassOid, (data: Array<any>) => {
@@ -241,6 +280,10 @@ export class Token extends BaseModel {
             return `${this.context.StorageRelational}odata/Token`;
     }
 
+    /**
+    * Log an Error message. Users can view the message content by accessing the edit dialog in the task list interface. Click the three-dot icon at the top right (or left in RTL) and select 'Logs'.
+    * @param {string} message - Content of the message.
+    */
     public async LogErrorAsync(message: string, detailLink?: string) {
         let payload = {
             tokenOid: this.Oid,
@@ -251,6 +294,10 @@ export class Token extends BaseModel {
         await PostAsync(this.context, `${this.context.StorageRelational}odata/Token/DataServiceControllers.LogError`, payload, this.context.CreateRequest("POST"));
     }
 
+    /**
+    * Log an Information message. Users can view the message content by accessing the edit dialog in the task list interface. Click the three-dot icon at the top right (or left in RTL) and select 'Logs'.
+    * @param {string} message - Content of the message.
+    */
     public async LogInformationAsync(message: string) {
         let payload = {
             tokenOid: this.oid,
@@ -261,6 +308,10 @@ export class Token extends BaseModel {
         await PostAsync(this.context, `${this.context.StorageRelational}odata/Token/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
     }
 
+    /**
+    * Log an Warning message. Users can view the message content by accessing the edit dialog in the task list interface. Click the three-dot icon at the top right (or left in RTL) and select 'Logs'.
+    * @param {string} message - Content of the message.
+    */
     public async LogWarningAsync(message: string) {
         let payload = {
             tokenOid: this.oid,
@@ -271,6 +322,11 @@ export class Token extends BaseModel {
         await PostAsync(this.context, `${this.context.StorageRelational}odata/Token/DataServiceControllers.LogExecution`, payload, this.context.CreateRequest("POST"));
     }
 
+    /**
+    * Save all pending changes of the token.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @returns Identifier of the saved record.
+    */
     public async SaveAsync(context: Context): Promise<number | string | undefined> {                
         let objectsToSave: Array<string> = [];
 

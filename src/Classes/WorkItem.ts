@@ -7,6 +7,10 @@ import { Token } from './Token';
 import { Guid, IDictionary, Status } from '../Types';
 import { PostAsync, GetAsync } from './../Helpers/Rest';
 
+
+/**
+* A WorkItem represents an instance of an automated business process. It also represents a request made by an individual and encompasses all the associated data.
+*/
 export class WorkItem extends BaseModel {
     public static ClassOid = "7a767398-3c6e-4d81-8c04-369600dcb4a7";
     public static ClassName = "Venki.Process.WorkItem";
@@ -20,6 +24,10 @@ export class WorkItem extends BaseModel {
     protected code?: string;
     protected status?: Status;
 
+    /**
+     * Create a new instance of the type WorkItem. This constructor is used by the library's code and should not be used by API users.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     */
     constructor (context: Context) {
         super(context);
         this.classOid = WorkItem.ClassOid;
@@ -85,6 +93,7 @@ export class WorkItem extends BaseModel {
 
     /**
     * Set the identifier of the requester
+    * @param {number | undefined} value - The new content for the field RequesterOid.
     */
     public set RequesterOid(value: number | undefined) {
         this.requesterOid = value;
@@ -100,6 +109,7 @@ export class WorkItem extends BaseModel {
 
     /**
     * @deprecated Set the code of the requester
+    * @param {number | undefined} value - The new content for the field Code.
     */
     public set Code(value: string | undefined) {
         this.code = value;
@@ -130,12 +140,22 @@ export class WorkItem extends BaseModel {
             return undefined;
     }
 
+    /**
+    * Load the object's content from JSON data.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {Array<any>} data - An array of key-value pairs (JSON data).
+    * @returns Object instance initialized.
+    */
     public static Parse(context: Context, data: Array<any>): WorkItem {
         let obj = new WorkItem(context);
         obj.Parse(data);
         return obj;
     }
 
+    /**
+    * Populate the object's fields with data from the record.
+    * @param {IDictionary} data - A dictionary holding the record's data.
+    */
     public Parse(data: IDictionary) {
         super.Parse(data);
         if (data) {
@@ -165,7 +185,7 @@ export class WorkItem extends BaseModel {
     * Find a work item by an identifier
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
     * @param {number} id - Identifier of the instance.
-    * @returns Object instance of the work item.
+    * @returns Promise to get the object instance of the work item.
     */
     public static async FindAsync(context: Context, id: number): Promise<WorkItem> {
         return <WorkItem>(await context.FindAsync(`${context.StorageRelational}odata/WorkItem(${id})?$selectCustom=true`,
@@ -177,7 +197,7 @@ export class WorkItem extends BaseModel {
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
     * @param {string} processCode - Unique code of the process. (click the script icon above the field Name inside the process editor and tab Properties)
     * @param {string} instanceCode - Code of the instance.
-    * @returns Array of work items that meet the criteria.
+    * @returns Promise to get the array of work items that meet the criteria.
     */
     public static async FindByCodeAsync(context: Context, processCode: string, instanceCode: string): Promise<Array<WorkItem>> {
         console.warn("WARNING: function FindByCodeAsync is deprecated. Consider change this call to the new function FindByFieldAsync.");
@@ -191,7 +211,7 @@ export class WorkItem extends BaseModel {
     * @param {string} processCode - Unique code of the process. (click the script icon above the field Name inside the process editor and tab Properties)
     * @param {string} field - Name or alias of the field. (click the script icon in the edition dialog)
     * @param {string} searchValue - Text criteria to find the instances.
-    * @returns Array of work items that meet the criteria.
+    * @returns Promise to get the array of work items that meet the criteria.
     */
     public static async FindByFieldAsync(context: Context, processCode: string, field: string, searchValue: string): Promise<Array<WorkItem>> {
         let actualName = Metadata.GetPropertyName(context, WorkItem.ClassOid, field);
@@ -210,6 +230,7 @@ export class WorkItem extends BaseModel {
     /**
     * Save all pending changes of the work item.
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @returns Identifier of the saved record.
     */
     public async SaveAsync(context: Context): Promise<number | string | undefined> {
 
@@ -226,6 +247,10 @@ export class WorkItem extends BaseModel {
         return this.oid;
     }
 
+    
+    /**
+    * Metadata key for the TokenExecution type, used to represent the execution of a process task.
+    */
     public static TokenExecutionClassOid: string  = "d5a12beb-a524-4b3c-a543-8194e37d9d88";
 
     /**

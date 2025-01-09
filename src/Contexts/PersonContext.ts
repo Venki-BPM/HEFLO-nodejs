@@ -3,6 +3,9 @@ import { Metadata } from '../Metadata';
 import { Person } from '../Classes/Person';
 import { CustomType } from '../BaseModel';
 
+/**
+ * Contextual information for customizations triggered in the People's edit interface.
+ */
 export class PersonContext extends Context {
     private person: Person;
 

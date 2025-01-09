@@ -1,7 +1,11 @@
 import { Context } from './Context';
+import { WorkItem } from './Index';
 import { Metadata } from './Metadata';
 import { Guid, IDictionary } from './Types';
 
+/**
+* The base class for all business objects.
+*/
 export class BaseModel {
 
     protected context: Context;
@@ -50,6 +54,10 @@ export class BaseModel {
         this.context.addChange(className, actualName, key, value);
     }
 
+    /**
+    * Populate the object's fields with data from the record.
+    * @param {IDictionary} data - A dictionary holding the record's data.
+    */
     public Parse(data: IDictionary) {
         this.isNew = false;
         if (data) {
@@ -70,8 +78,11 @@ export class BaseModel {
         }
     }
 
-    private static ProcessInstanceClassOid = "d5a12beb-a524-4b3c-a543-8194e37d9d88";
-
+    /**
+    * Retrieve all rows from a record list field.
+    * @param {string} fieldName - Name of the record list.
+    * @returns A promise to retrieve the content record list.
+    */
     public async GetListAsync(fieldName: string): Promise<Array<CustomType> | undefined> {
         await Metadata.CheckAsync(this.context, this.classOid);
         let actualName = Metadata.GetPropertyName(this.context, this.classOid, fieldName);
@@ -97,7 +108,7 @@ export class BaseModel {
                 }
             }
 
-            let classOid = this.classOid || BaseModel.ProcessInstanceClassOid;
+            let classOid = this.classOid || WorkItem.TokenExecutionClassOid;
             classOid = classOid.startsWith("ce_") ? classOid.substring(3) : classOid;
 
             let url = `${this.context.StorageNoSQL}odata/CustomProperty/DataServiceControllers.GetListData?classOid=${classOid}&instanceOid=${this.GetKey()}&entityOid=${entityId}`;
@@ -120,6 +131,12 @@ export class BaseModel {
         return copyRecord;
     }
 
+    /**
+    * Add a row to the record list.
+    * @param {string} fieldName - Name of the record list.
+    * @param {string} record - A dictionary containing all the fields of the row.
+    * @returns A promise to retrieve the content of the new object added to the record list.
+    */
     public async AddRecordAsync(fieldName: string, record: any): Promise<CustomType> {
         await Metadata.CheckAsync(this.context, this.classOid);
         let actualName = Metadata.GetPropertyName(this.context, this.classOid, fieldName);
@@ -144,7 +161,13 @@ export class BaseModel {
         }
     }
 
-    public async UpdateRecordAsync(fieldName: string, instanceId: string, record: any): Promise<void> {
+    /**
+    * Update a row in a record list.
+    * @param {string} fieldName - Name of the record list.
+    * @param {string} instanceId - A list of identifiers for the rows in the record list.
+    * @param {string} record - A dictionary containing all the fields of the row.
+    */
+    public async UpdateRecordAsync(fieldName: string, instanceId: string, record: any) {
         await Metadata.CheckAsync(this.context, this.classOid);
         let actualName = Metadata.GetPropertyName(this.context, this.classOid, fieldName);
         if (!actualName)
@@ -171,11 +194,21 @@ export class BaseModel {
         }
     }
 
+    /**
+    * Delete a list of rows in a record list.
+    * @param {string} fieldName - Name of the record list.
+    * @param {string} instanceId - A list of identifiers for the rows in the record list.
+    */
     public async DeleteRecordsAsync(fieldName: string, instances: Array<string>) {
         for(let instanceOid of instances)
             await this.DeleteRecordAsync(fieldName, instanceOid);
     }
 
+    /**
+    * Delete a row in a record list.
+    * @param {string} fieldName - Name of the record list.
+    * @param {string} instanceId - Identifier of the row of the record list.
+    */
     public async DeleteRecordAsync(fieldName: string, instanceId: string) {
         await Metadata.CheckAsync(this.context, this.classOid);
         let actualName = Metadata.GetPropertyName(this.context, this.classOid, fieldName);
@@ -191,6 +224,11 @@ export class BaseModel {
         this.lists[actualName] = this.lists[actualName].filter(item => item.Oid !== instanceId);
     }
 
+    /**
+    * Save all pending changes of a field of type record list.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {string} fieldName - Name of the record list.
+    */
     public async SaveRecordListAsync(context: Context, fieldName: string) {
         await Metadata.CheckAsync(this.context, this.classOid);
         let actualName = Metadata.GetPropertyName(this.context, this.classOid, fieldName);
@@ -214,33 +252,69 @@ export class BaseModel {
         }
     }
 
+    /**
+    * Save all pending changes of an object.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @returns Identifier of the saved record.
+    */
     public async SaveAsync(context: Context): Promise<number | string | undefined> {
         return undefined;
     }
 }
 
+/**
+ * A record of a custom entity created by the environment's implementer.
+ */
 export class CustomType extends BaseModel {
 
+    /**
+     * Record identifier.
+     */
     private oid: string;
 
+    /**
+     * Get the record key.
+     * @returns Record key
+     */
     protected GetKey(): string | number {
         return this.oid;
     }
 
+    /**
+     * Create a new instance of the custom type. In case of a new record use the method NewAsync instead of this constructor.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     * @param {string} classOid - Identifier of the type medatata.
+     */
     private constructor (context: Context, classOid: string) {
         super(context);
         this.classOid = classOid;
         this.oid = Guid.newGuid();
     }
 
+    /**
+     * Change the value of a field of the record.
+     * @param {string} fieldName - Field name.
+     * @param {any} value - The new value for the field.
+     */
     public Set(fieldName: string, value: any) {
         this.LogChange(this.classOid, fieldName, this.oid, value);
     }
 
+    /**
+     * The the record identifier.
+     */
     public get Oid(): string {
         return this.oid;
     }
 
+    /**
+    * Find a custom record by an identifier.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {number} classOid - Identifier of type metadata.
+    * @param {string} recordId - Identifier of the instance.
+    * @param {boolean} useCache - Do not store the record in the local cache.
+    * @returns Promise to get the object instance.
+    */
     public static async FindAsync(context: Context, classOid: string, recordId: string, useCache: boolean = false): Promise<any> {
         if (recordId) {
             let cacheKey = `${recordId}-${classOid}`;
@@ -259,6 +333,13 @@ export class CustomType extends BaseModel {
         return null;
     }
 
+    /**
+    * Retrieve a list of objects. 
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {number} classOid - Identifier of type metadata.
+    * @param {boolean} useCache - Do not store the record in the local cache.
+    * @returns Promise to get the object list.
+    */
     public static async LoadAsync(context: Context, classOid: string, useCache: boolean = true): Promise<Array<CustomType>> {
         let cacheKey = `${classOid}`;
         if (useCache && context.Cache.get(cacheKey)) {
@@ -276,17 +357,35 @@ export class CustomType extends BaseModel {
         return result;
     }
 
+    /**
+    * Populate the object's fields with data from the record.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {string} classOid - Identifier of the type metadata.
+    * @param {IDictionary} data - A dictionary holding the record's data.
+    * @returns Object loaded.
+    */
     public static Parse(context: Context, classOid: string, data: IDictionary): CustomType {
         let obj = new CustomType(context, classOid);
         obj.Parse(data);
         return obj;
     }
 
+    /**
+    * Populate the object's fields with data from the record.
+    * @param {IDictionary} data - A dictionary holding the record's data.
+    */
     public Parse(data: IDictionary) {
         super.Parse(data);
         this.oid = data["Oid"];
     }
 
+    /**
+    * Save all pending changes of an object.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {string} classRef - Identifier of the type metadata.
+    * @param {string} instanceRef - Instance identifier.
+    * @returns Identifier of the saved record.
+    */
     public async SaveAsync(context: Context, classRef?: string, instanceRef?: string): Promise<number | string> {
 
         let classOid = classRef || this.classOid;
@@ -302,11 +401,24 @@ export class CustomType extends BaseModel {
         return this.Oid;
     }        
 
+    /**
+    * Create a new instance of a custom record and initialize fields based on type metadata.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {string} classOid - Identifier of the type metadata.
+    * @returns Promise to get the object instance of a department
+    */
     public static async NewAsync(context: Context, classOid: string): Promise<CustomType> {
         await Metadata.CheckAsync(context, classOid);
         return new CustomType(context, classOid);
     }
 
+    /**
+     * Parse Json content and populate the record.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     * @param {string} classOid - Identifier of the type metadata.
+     * @param {any} json - Json content.
+     * @returns 
+     */
     public static FromJSON(context: Context, classOid: string, json: any): CustomType {
         let newItem = new CustomType(context, classOid);
         newItem.Parse(json);

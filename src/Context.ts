@@ -6,9 +6,17 @@ import { BaseModel } from './BaseModel';
 import { WorkItem } from './Classes/WorkItem';
 import { Token } from './Classes/Token';
 import { Class } from './Classes/Class';
-import { Guid, IDictionary } from './Types';
+import { Guid, IDictionary, QueryParam, QueryResult } from './Types';
 import { PostAsync, GetAsync } from './Helpers/Rest';
 
+/**
+ * Contextual information provided by the HEFLO backend. It may include data such as:
+ * - Cache Time to live.
+ * - Backend servers urls.
+ * - Region and Stage of the environemnt.
+ * - Test flag. 
+ * - Metadata.
+ */
 export class Context {
     constructor(request: any) {
         this.changes = [];
@@ -104,6 +112,9 @@ export class Context {
     private stage: string = "prod";
     private region: string;
 
+    /**
+     * Retrieve the Authorization header from the last authentication.
+     */
     public get AuthorizationHeader() {
         return this.authorizationHeader;
     }
@@ -382,8 +393,20 @@ export class Context {
         return body.join('\r\n');
     }
 
+    /**
+     * Internal cache storage.
+     */
     private static queryCache = new NodeCache( { useClones: false, checkperiod: 30 } );
 
+    /**
+     * Run a Select command to retrieve data from the Export Database of the environment.
+     * @param {string} sql - SQL SELECT statement.
+     * @param {number} page - Page index, which must be 1 or greater.
+     * @param {number} itemsPerPage - Page size, which must be 100 or less.
+     * @param {Array<QueryParam>} parameters - Parameters of the SQL statement. Example: [{ name: "@name", value: 'mary' }]
+     * @param {boolean} avoidCache - If true, the result will not be stored in the internal cache.
+     * @returns A promise to retrieve the records from the SELECT statement.
+     */
     public async QueryAsync(sql: string, page: number, itemsPerPage: number, parameters: Array<QueryParam>, avoidCache: boolean = false): Promise<Array<any>> {
 
         if (itemsPerPage > 100)
@@ -425,6 +448,18 @@ export class Context {
         }
     }
 
+    /**
+     * Run a Select command to retrieve data from the Export Database of the environment.
+     * @param {string} environment - The environment identifier. It can be obtained from the Manage Environments page.
+     * @param {string} apiKey - An api key generated in the Web Services interface within the process editor.
+     * @param {string} secretKey - A secret key generated in the Web Services interface within the process editor.
+     * @param {string} sql - SQL SELECT statement.
+     * @param {number} page - Page index, which must be 1 or greater.
+     * @param {number} itemsPerPage - Page size, which must be 100 or less.
+     * @param {Array<QueryParam>} parameters - Parameters of the SQL statement. Example: [{ name: "@name", value: 'mary' }]
+     * @param {boolean} avoidCache - If true, the result will not be stored in the internal cache.
+     * @returns A promise to retrieve the records from the SELECT statement.
+     */
     public static async QueryAsync(environment: string, apiKey: string, secretKey: string, sql: string, page: number, itemsPerPage: number, 
             parameters: Array<QueryParam>, avoidCache: boolean = false): Promise<Array<any>> {
 
@@ -477,6 +512,15 @@ export class Context {
         }
     }
 
+    /**
+     * Send one email message to several recipients.
+     * @param {Array<string>} recipients - Recipients of the message.
+     * @param {string} subject - Field subject of the email.
+     * @param {string} body - HTML body of the message.
+     * @param {Array<string>} attachments - A list of urls of the attachments.
+     * @param {number} tokenOid - The associated Token reference. If provided, the email will be accessible from the Conversation tab.
+     * @param {string} sender - The sender name of the email.
+     */
     public async SendMailAsync(recipients: Array<string>, subject: string, body: string, attachments?: Array<string>, tokenOid?: number, sender?: string) {
 
         let payload = {
@@ -491,14 +535,4 @@ export class Context {
         await PostAsync(this, `${this.StorageRelational}odata/Connector/DataServiceControllers.SendMail`, payload, this.CreateRequest("POST"));
     }
 
-}
-
-interface QueryResult {
-    ResultSet?: Array<any>;
-    Error?: any;
-}
-
-export interface QueryParam {
-    name: string;
-    value: string | number;
 }

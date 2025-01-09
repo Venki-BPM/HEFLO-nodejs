@@ -3,6 +3,12 @@ import { CustomType } from '../BaseModel';
 import { File } from '../Classes/File';
 import { TokenWorkItemContext } from './TokenWorkItemContext';
 
+/**
+ * Contextual information for customizations of record lists used in business process instances such as: 
+ * - Initialization of record lists.
+ * - Removed rows in a record list.
+ * - A button click in the edition of a record list.
+ */
 export class WorkItemRecordContext extends TokenWorkItemContext {
     private record: CustomType;
 
@@ -19,6 +25,11 @@ export class WorkItemRecordContext extends TokenWorkItemContext {
     }
 }
 
+/**
+ * Contextual information for customizations of files used in business process instances such as: 
+ * - User atttached a file.
+ * - User removed an attached file.
+ */
 export class WorkItemFileContext extends TokenWorkItemContext {
     private file: File;
 
