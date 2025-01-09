@@ -16,6 +16,10 @@ export class Department extends BaseModel {
     private parentDepartmentOid?: number;
     private code: string = "";
 
+    /**
+     * Create a new instance of the type Department. In case of a new record use the method NewAsync instead of this constructor.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     */
     constructor(context: Context) {
         super(context);
         this.classOid = Department.ClassOid;
@@ -208,7 +212,7 @@ export class Department extends BaseModel {
     }
 
     /**
-    * Create a new instance of a department and initialize all metadata to it.
+    * Create a new instance of a department and initialize all fields.
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
     * @returns Promise to get the object instance of a department
     */

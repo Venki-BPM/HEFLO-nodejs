@@ -24,6 +24,10 @@ export class WorkItem extends BaseModel {
     protected code?: string;
     protected status?: Status;
 
+    /**
+     * Create a new instance of the type WorkItem. This constructor is used by the library's code and should not be used by API users.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     */
     constructor (context: Context) {
         super(context);
         this.classOid = WorkItem.ClassOid;

@@ -12,6 +12,10 @@ export class Group extends Account {
 
     protected requireTakeResponsability: boolean | undefined;
 
+    /**
+     * Create a new instance of the type Group. In case of a new record use the method NewAsync instead of this constructor.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     */
     constructor (context: Context) {
         super(context);
         this.classOid = Group.ClassOid;
@@ -114,7 +118,7 @@ export class Group extends Account {
     } 
 
     /**
-    * Create a new instance of an Group and initialize all metadata to it.
+    * Create a new instance of an Group and initialize all fields.
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
     * @returns Promise to get the new object instance of a group.
     */

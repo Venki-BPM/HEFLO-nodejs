@@ -15,6 +15,10 @@ export class Account extends BaseModel {
     protected name: string = "";
     protected email: string = "";
 
+    /**
+     * Create a new instance of the type Account. In case of a new record use the method NewAsync instead of this constructor.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     */
     constructor(context: Context) {
         super(context);
         this.classOid = Account.ClassOid;
@@ -110,7 +114,7 @@ export class Account extends BaseModel {
     }
 
     /**
-    * Create a new instance of an Account and initialize all metadata to it.
+    * Create a new instance of an Account and initialize all fields.
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
     * @returns Promise to get the new object instance of a person or group.
     */

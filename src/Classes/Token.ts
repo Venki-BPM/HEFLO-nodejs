@@ -27,6 +27,10 @@ export class Token extends BaseModel {
     protected sourceType?: string;
     protected status?: TokenStatus;
 
+    /**
+     * Create a new instance of the type Token. This constructor is used by the library's code and should not be used by API users.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     */
     constructor (context: Context) {
         super(context);
         this.classOid = Token.ClassOid;

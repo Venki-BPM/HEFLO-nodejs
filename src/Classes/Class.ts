@@ -48,7 +48,7 @@ export class Class extends BaseModel {
     }
 
     /**
-    * Create an object of type Class using the context provided as a parameter.
+    * Create an object of type Class using the context provided as a parameter. This constructor is used by the library's code and should not be used by API users.
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
     * @returns Object instance of a Class.
     */

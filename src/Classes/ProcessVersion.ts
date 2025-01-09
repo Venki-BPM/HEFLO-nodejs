@@ -10,6 +10,10 @@ export class ProcessVersion extends BaseModel {
     public Oid: number = 0;
     public Number: number = 0;
 
+    /**
+     * Create a new instance of the type ProcessVersion. This constructor is used by the library's code and should not be used by API users.
+     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+     */
     constructor(context: Context) {
         super(context);
         this.classOid = ProcessVersion.ClassOid;
