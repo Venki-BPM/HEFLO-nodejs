@@ -77,19 +77,29 @@ export class Account extends BaseModel {
     * Find a account (person or group) by an identifier
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
     * @param {number} id - Identifier of the instance.
-    * @returns Object instance of a person or group.
+    * @returns Promise to get the object instance of a person or group.
     */
     public static async FindAsync(context: Context, id: number): Promise<Person> {
         return <Person>(await context.FindAsync(`${context.StorageRelational}odata/Account(${id})?$select=Oid,Name,Email&$selectCustom=true`,
             Account.ClassOid, (data: Array<any>) => { return Account.Parse(context, data); }));
     }
 
+    /**
+    * Load the object's content from JSON data.
+    * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
+    * @param {Array<any>} data - An array of key-value pairs (JSON data).
+    * @returns Object instance initialized.
+    */
     public static Parse(context: Context, data: Array<any>): Account {
         let obj = new Account(context);
         obj.Parse(data);
         return obj;
     }
 
+    /**
+    * Populate the object's fields with data from the record.
+    * @param {IDictionary} data - A dictionary holding the record's data.
+    */
     public Parse(data: IDictionary) {
         super.Parse(data);
         if (data) {
@@ -102,7 +112,7 @@ export class Account extends BaseModel {
     /**
     * Create a new instance of an Account and initialize all metadata to it.
     * @param {Context} context - Context information of the call. In most of the cases you can build the context using the request object.
-    * @returns Object instance of a person or group.
+    * @returns Promise to get the new object instance of a person or group.
     */
     public static async NewAsync(context: Context): Promise<Account> {
         await Metadata.CheckAsync(context, Account.ClassOid);
