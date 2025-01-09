@@ -85,3 +85,31 @@ export enum Status {
      */
     Draft = 5
 }
+
+/**
+ * SQL Query result.
+ */
+export interface QueryResult {
+    /**
+     * Records of the result set.
+     */
+    ResultSet?: Array<any>;
+    /**
+     * Exception data in case of errors. 
+     */
+    Error?: any;
+}
+
+/**
+ * SQL query parameter.
+ */
+export interface QueryParam {
+    /**
+     * Name of the parameter.
+     */
+    name: string;
+    /**
+     * Value of the parameter.
+     */
+    value: string | number;
+}
