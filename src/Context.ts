@@ -1,13 +1,13 @@
-import * as NodeCache from 'node-cache';
 import { AxiosRequestConfig, Method } from 'axios';
-import { Delta, DeltaItem, GetModifiedDataOptions, WorkItemComment } from './Delta';
-import { Metadata } from './Metadata';
+import * as NodeCache from 'node-cache';
 import { BaseModel } from './BaseModel';
-import { WorkItem } from './Classes/WorkItem';
-import { Token } from './Classes/Token';
 import { Class } from './Classes/Class';
+import { Token } from './Classes/Token';
+import { WorkItem } from './Classes/WorkItem';
+import { Delta, DeltaItem, DeltaMessage, DeltaMessageDialogOptions, DeltaMessageEnum, DeltaMessageOptions, GetModifiedDataOptions, WorkItemComment } from './Delta';
+import { GetAsync, PostAsync } from './Helpers/Rest';
+import { Metadata } from './Metadata';
 import { Guid, IDictionary, QueryParam, QueryResult } from './Types';
-import { PostAsync, GetAsync } from './Helpers/Rest';
 
 /**
  * Contextual information provided by the HEFLO backend. It may include data such as:
@@ -21,6 +21,7 @@ export class Context {
     constructor(request: any) {
         this.changes = [];
         this.comments = [];
+        this.messages = [];
         if (request) {
             this.authorizationHeader = request.body["Bearer"];
             this.domain = request.body["Domain"];
@@ -96,6 +97,7 @@ export class Context {
 
     private changes: Array<DeltaItem>;
     private comments: Array<WorkItemComment>;
+    private messages: Array<DeltaMessage>;
     private authorizationHeader: string;
     private domain: string;
     private cacheTTL: number;
@@ -211,6 +213,7 @@ export class Context {
             RefreshArguments: false,
             Changes: this.changes,
             Comments: this.comments,
+            Messages: this.messages.slice(0, 51),
             Options: options
         }
         return delta;
@@ -535,4 +538,61 @@ export class Context {
         await PostAsync(this, `${this.StorageRelational}odata/Connector/DataServiceControllers.SendMail`, payload, this.CreateRequest("POST"));
     }
 
+    public addMessage(type: DeltaMessageEnum, content: string, options: DeltaMessageOptions = {}) {
+        if (type != null && content) {
+            this.messages.push({
+                Type: type,
+                Content: content,
+                Options: options
+            });
+        }
+    }
+    
+    /**
+     * Displays an informational message in the front-end interface.
+     * @param {string} content - The content of the informational message.
+     * @param {DeltaMessageOptions} options - Additional options for the message.
+     */
+    public ShowInformation(content: string, options: DeltaMessageOptions = {}) {
+        this.addMessage(DeltaMessageEnum.Information, content, options);
+    }
+
+    /**
+     * Displays a warning message in the front-end interface.
+     * @param {string} content - The content of the warning message.
+     * @param {DeltaMessageOptions} options - Additional options for the warning message.
+     */
+    public ShowWarning(content: string, options: DeltaMessageOptions = {}) {
+        this.addMessage(DeltaMessageEnum.Warning, content, options);
+    }
+
+    /**
+     * Displays an error message in the front-end interface.
+     * @param {string} content - The content of the error message.
+     * @param {DeltaMessageOptions} options - Additional options for the error message.
+     */
+    public ShowError(content: string, options: DeltaMessageOptions = {}) {
+        this.addMessage(DeltaMessageEnum.Error, content, options);
+    }
+
+    /**
+     * Displays a success message in the front-end interface.
+     * @param {string} content - The content of the success message.
+     * @param {DeltaMessageOptions} options - Additional options for the success message.
+     */
+    public ShowSuccess(content: string, options: DeltaMessageOptions = {}) {
+        this.addMessage(DeltaMessageEnum.Success, content, options);
+    }
+
+    /**
+     * Displays a dialog message in the front-end interface.
+     * The message content is treated as HTML
+     * @param {string} content - The content of the dialog message.
+     * @param {DeltaMessageDialogOptions} options - Additional options for the message.
+     */
+    public ShowDialog(content: string, options: DeltaMessageDialogOptions = {}) {
+        (<DeltaMessageOptions>options).contentIsHtml = true;
+        (<DeltaMessageOptions>options).isAlert = true;
+        this.addMessage(DeltaMessageEnum.Information, content, options);
+    }
 }
