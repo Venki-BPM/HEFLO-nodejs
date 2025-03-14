@@ -1,13 +1,13 @@
-import { Context } from '../Context';
 import { BaseModel } from '../BaseModel';
-import { WorkItem } from './WorkItem';
+import { Context } from '../Context';
+import { IDictionary, TokenStatus } from '../Types';
+import { PostAsync } from './../Helpers/Rest';
+import { Metadata } from './../Metadata';
 import { Account } from './Account';
 import { FlowElement } from './FlowElement';
-import { IDictionary, TokenStatus } from '../Types';
-import { Person } from './Person';
 import { Group } from './Group';
-import { Metadata } from './../Metadata';
-import { PostAsync } from './../Helpers/Rest';
+import { Person } from './Person';
+import { WorkItem } from './WorkItem';
 
 /**
 * A Token is a concurrent component of a WorkItem. Typically, it is linked to the current task and associated with the user responsible for that task.
@@ -341,5 +341,9 @@ export class Token extends BaseModel {
         return this.oid;
     }
 
+    public async GoPreviousElementUniqueCode(uniqueCode: string) {
+        let payload = { uniqueCode }
 
+        return await PostAsync(this.context, `${this.context.StorageRelational}odata/Token(${this.oid}L)/DataServiceControllers.GoPreviousElementUniqueCode`, payload, this.context.CreateRequest("POST"));
+    }
 }
