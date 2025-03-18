@@ -24,6 +24,7 @@ export class Context {
         this.messages = [];
         if (request) {
             this.authorizationHeader = request.body["Bearer"];
+            this.userId = request.body["UserId"];
             this.domain = request.body["Domain"];
             this.cacheTTL = request.body["CacheTTL"] || 600;
             this.isTest = request.body["IsTest"];
@@ -35,6 +36,7 @@ export class Context {
             this.stage = request.body["Stage"];
         } else {
             this.authorizationHeader = "";
+            this.userId = "";
             this.domain = "";
             this.cacheTTL = 600;
             this.isTest = false;
@@ -99,6 +101,7 @@ export class Context {
     private comments: Array<WorkItemComment>;
     private messages: Array<DeltaMessage>;
     private authorizationHeader: string;
+    private userId: string;
     private domain: string;
     private cacheTTL: number;
     private isTest: boolean;
@@ -119,6 +122,10 @@ export class Context {
      */
     public get AuthorizationHeader() {
         return this.authorizationHeader;
+    }
+
+    public get UserId() {
+        return this.userId;
     }
 
     public get StorageRelational() {

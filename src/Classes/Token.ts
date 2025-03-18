@@ -341,9 +341,16 @@ export class Token extends BaseModel {
         return this.oid;
     }
 
+    /**
+     * Revert the token to a previous activity by unique code.
+     * @param {string} uniqueCode - The unique code of the activity to which the token should be reverted.
+     */
     public async GoPreviousElementUniqueCode(uniqueCode: string) {
-        let payload = { uniqueCode }
+        let payload = {
+            uniqueCode,
+            userId: this.context.UserId
+        }
 
-        return await PostAsync(this.context, `${this.context.StorageRelational}odata/Token(${this.oid}L)/DataServiceControllers.GoPreviousElementUniqueCode`, payload, this.context.CreateRequest("POST"));
+        await PostAsync(this.context, `${this.context.StorageRelational}odata/Token(${this.oid}L)/DataServiceControllers.GoPreviousElementUniqueCode`, payload, this.context.CreateRequest("POST"));
     }
 }
